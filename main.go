@@ -1,18 +1,29 @@
 package main
 
 import (
-	"net/http"
-
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
 
 var (
-	// global logger instance, can be used in any part.
+	// global logger instance.
 	logger = NewLogger()
 )
 
 func main() {
+	initialization := Maybe{
+		compileTemplates,
+		func() error {
+			return assignSqlite("dev.db")
+		},
+		migrate,
+	}
+
+	err := initialization.Eval()
+	if err != nil {
+		logger.Fatal().Msg(err.Error())
+	}
+
 	e := echo.New()
 	e.Use(
 		LoggingMiddleware,
@@ -20,16 +31,17 @@ func main() {
 		middleware.CORS(),
 	)
 
-	// pages.
-	e.GET("/", func(c echo.Context) error {
-		return c.NoContent(http.StatusOK)
-	})
+	// serve static files.
+	e.Static("/static", "static")
+
+	// serve pages.
+	e.GET("/", serveMain)
 
 	// rest api.
 	api := e.Group("/api")
-	api.GET("/ping", func(c echo.Context) error {
-		return c.String(http.StatusOK, "pong")
-	})
+	api.GET("/get_boards", getBoards)
+	// moder.
+	api.POST("/create_board", createBoard)
 
 	logger.Info().Msg(e.Start(":3000").Error())
 }

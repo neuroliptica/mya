@@ -38,7 +38,7 @@ var templates = map[string]*Template{
 }
 
 // Compile all templates at initialization.
-func CompileTemplates() error {
+func compileTemplates() error {
 	for k := range templates {
 		err := templates[k].Compile()
 		if err != nil {
