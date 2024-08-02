@@ -23,6 +23,7 @@ func migrate() error {
 	// declaring migrations.
 	migrations := Maybe{
 		migrateBoard,
+		migratePost,
 	}
 
 	return migrations.Eval()
