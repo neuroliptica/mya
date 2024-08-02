@@ -36,10 +36,12 @@ func main() {
 
 	// serve pages.
 	e.GET("/", serveMain)
+	e.GET("/:board", serveBoard)
 
 	// rest api.
 	api := e.Group("/api")
 	api.GET("/get_boards", getBoards)
+	api.POST("/post", createPost)
 	// moder.
 	api.POST("/create_board", createBoard)
 

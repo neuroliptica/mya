@@ -47,10 +47,10 @@ func createBoard(c echo.Context) error {
 
 func getBoards(c echo.Context) error {
 	var boards []Board
-	result := db.Find(&boards)
-	if result.Error != nil {
+	err := get(&boards)
+	if err != nil {
 		// todo: not to expose internal db error.
-		return c.String(http.StatusBadRequest, result.Error.Error())
+		return c.String(http.StatusBadRequest, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, boards)
