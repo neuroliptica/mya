@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -27,4 +29,27 @@ func migrate() error {
 	}
 
 	return migrations.Eval()
+}
+
+// Check if record with provided conditions exists.
+func checkRecord[T any](schema *T) (*T, error) {
+	var res T
+	result := db.
+		Where(schema).
+		First(&res)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	if result.RowsAffected == 0 {
+		return nil, errors.New("no records")
+	}
+
+	return &res, nil
+}
+
+// Generic selector.
+func get[T any](schema *T, conds ...any) error {
+	result := db.Find(schema, conds...)
+	return result.Error
 }
