@@ -1,12 +1,19 @@
-  
 body {
   background-color: #131315;
   color: #c5c8c6;
-  font-size: 22pt;
+  font-size: 14px;
   word-wrap: break-word;
   margin-bottom: 50px;
-  margin-top: 75px;
+  margin-top: 30px;
   font-family: Open Sans,sans-serif;
+}
+
+.main, body, html {
+  height: 100%;
+}
+
+main {
+  display: block;
 }
 
 .header {
@@ -42,6 +49,10 @@ body {
   transition: .05s linear
 }
 
+.header-item:hover {
+  color: #b294bb;
+}
+
 .header-board {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -58,4 +69,22 @@ body {
   margin-bottom: 10px;
   margin-top: 3%;
   font-size: 2em;
+}
+
+.page-title {
+  font-size: 3em;
+  font-weight: 700;
+  text-align: left;
+  color: #b294bb;
+}
+
+.board {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  padding: 0 60px 60px;
+}
+
+.board, .main {
+  box-sizing: border-box;
 }
