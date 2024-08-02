@@ -7,12 +7,14 @@
 </head>
 <body>
   <header class="header">
-    <a class="header-item header-board" href="/" title="Main page">/main_page</a>
+    <a class="header-item header-board" href="/" title="Main page">main_page</a>
     {{ range . }}
     <a class="header-item header-board" href="/{{ .Link }}" title="{{ .Name }}">{{ .Name }}</a>
     {{ end }}
     <div class="header-spacer"></div>
     <a class="header-item header-board" href="/">info</a>
+    <a class="header-item header-board" href="/">settings</a>
+    <a class="header-item header-board" href="/">mod_log</a>
   </header>
   <div class="description">
     ~ nyan-ib template ~
