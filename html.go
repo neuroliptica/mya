@@ -11,7 +11,15 @@ type void struct{}
 
 func serveMain(c echo.Context) error {
 	view := new(strings.Builder)
-	err := templates["main_page"].Execute(view, void{})
+	// get all boards to display in header.
+	var boards []Board
+	result := db.Find(&boards)
+	if result.Error != nil {
+		msg := result.Error.Error()
+		return c.String(http.StatusInternalServerError, msg)
+	}
+
+	err := templates["main_page"].Execute(view, boards)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}

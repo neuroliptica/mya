@@ -14,8 +14,8 @@ type Board struct {
 	Name string `gorm:"unique" json:"name"`
 	Link string `gorm:"unique" json:"link"`
 
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	CreatedAt time.Time `json:"-"`
+	UpdatedAt time.Time `json:"-"`
 }
 
 func migrateBoard() error {
