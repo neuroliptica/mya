@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <link rel="stylesheet" href="static/dark.css">
-  <title>Main page</title>
+  <title>{{ .CurrentBoard.Name }} - meowchan</title>
 </head>
 <body>
   <header class="header">
@@ -17,9 +16,48 @@
     <a class="header-item header-board" href="/">settings</a>
     <a class="header-item header-board" href="/">mod_log</a>
   </header>
+  <main class="main">
+    <section id="threads" class="board">
+      <h1 class="page-title">
+        /{{ .CurrentBoard.Link }}/ - {{ .CurrentBoard.Name }}
+      </h1>
+      <nav class="board-nav">
+        <a class="button board-nav-item">Neuer Thread</a>
+        <a class="button board-nav-item">Katalog</a>
+        <div class="board-pagination">
+          <span class="board-pagination-page board-pagination-page-current">0</span>
+          <a class="button board-pagination-page" href="?page=1">1</a>
+        </div>
+      </nav>
+      <hr class="separator">
+      <section id="index-thread-container" class="thread-container">
 
-  <div class="description">
-    ~ nyan-ib template ~
-  </div>
+      {{ range .Threads }}
+        <article id="thread-{{ .OP.ID }}" class="thread thread-index" data-id="{{ .OP.ID }}">
+          <article id="post-{{ .OP.ID }}" class="post post-op post-file post-by-anon" data-id="{{ .OP.ID }}">
+            <header class="post-header">
+              <a class="post-header-item post-id" href="/{{ $.CurrentBoard.Link }}/{{ .OP.ID }}">#{{ .OP.ID }}</a>
+              <h3 class="post-header-item post-subject">{{ .OP.Subject }}</h3>
+              <time class="post-header-item post-time">{{ .OP.FormatTimestamp }}</time>
+            </header>
+            <section class="post-body">
+              <div class="post-files"></div>
+              <blockquote class="post-message">
+                {{ .OP.Text }}
+              </blockquote>
+            </section>
+            <footer class="post-footer"></footer>
+          </article>
+          <div class="omit">
+            <a class="omit-link" href="/{{ $.CurrentBoard.Link }}/{{ .OP.ID }}">zum Thread</a>
+          </div>
+          <hr class="separator">
+        </article>
+      {{ end }}
+
+      </section>
+      <hr class="separator">
+    </section>
+  </main>
 </body>
 </html>

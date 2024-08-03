@@ -27,6 +27,10 @@ type Post struct {
 	CaptchaValue string `json:"-" gorm:"-:all"`
 }
 
+func (t Post) FormatTimestamp() string {
+	return t.CreatedAt.Format("02/01/2006 15:04:05")
+}
+
 func migratePost() error {
 	return db.AutoMigrate(&Post{})
 }
