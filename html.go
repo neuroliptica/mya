@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -59,6 +60,9 @@ func serveBoard(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
 	}
+	sort.Slice(posts, func(i, j int) bool {
+		return posts[i].LastBump.After(posts[j].LastBump)
+	})
 	// todo: cache to avoid requests to db.
 	var boards []Board
 	err = get(&boards)

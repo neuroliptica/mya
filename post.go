@@ -35,6 +35,15 @@ func migratePost() error {
 	return db.AutoMigrate(&Post{})
 }
 
+// Update lastbump field.
+func bump(thread uint) error {
+	result := db.Model(&Post{}).
+		Where("id = ?", thread).
+		Update("last_bump", time.Now())
+
+	return result.Error
+}
+
 func createPost(c echo.Context) error {
 	post := new(Post)
 	err := echo.FormFieldBinder(c).
@@ -67,7 +76,7 @@ func createPost(c echo.Context) error {
 			})
 			return err
 		},
-		// Check if thread exists.
+		// Check if thread exists and not closed.
 		func() error {
 			return nil
 		},
@@ -88,10 +97,17 @@ func createPost(c echo.Context) error {
 		return c.String(http.StatusBadRequest, err.Error())
 	}
 
-	// If not sage and parent != 0, update last bump for parent.
 	result := db.Create(post)
 	if result.Error != nil {
 		return c.String(http.StatusBadRequest, err.Error())
+	}
+
+	// Bump parent thread.
+	if !post.Sage && post.Parent != 0 {
+		err = bump(post.Parent)
+		if err != nil {
+			return c.String(http.StatusInternalServerError, err.Error())
+		}
 	}
 
 	return c.JSON(http.StatusCreated, post)
