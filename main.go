@@ -1,6 +1,8 @@
 package main
 
 import (
+	"net/http"
+
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -33,6 +35,9 @@ func main() {
 
 	// serve static files.
 	e.Static("/static", "static")
+	e.GET("/favicon.ico", func(c echo.Context) error {
+		return c.Redirect(http.StatusPermanentRedirect, "/static/favicon.ico")
+	})
 
 	// serve pages.
 	e.GET("/", serveMain)
