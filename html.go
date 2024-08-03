@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math"
 	"net/http"
 	"sort"
 	"strconv"
@@ -18,10 +19,17 @@ type ThreadView struct {
 	Replies []Post
 }
 
+type Paging struct {
+	Current uint
+	Pages   []uint
+}
+
 type BoardView struct {
 	CurrentBoard Board
 	Header       []Board
 	Threads      []ThreadView
+
+	Pages Paging
 }
 
 func serveMain(c echo.Context) error {
@@ -54,15 +62,30 @@ func serveBoard(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
 	}
-	// todo: sort by last bump, get [10*page:10*(page+1)]
 	var posts []Post
 	err = get(&posts, "board = ? AND parent = ?", board.Link, 0)
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
 	}
+	// Sorting by last bump.
 	sort.Slice(posts, func(i, j int) bool {
 		return posts[i].LastBump.After(posts[j].LastBump)
 	})
+	// Get total pages on board.
+	pages := len(posts)/10 + 1
+	if len(posts)%10 == 0 && len(posts) != 0 {
+		pages--
+	}
+	// Getting posts with offset for current page.
+	lb := page * 10
+	rb := (page + 1) * 10
+	rb = int(math.Min(float64(rb), float64(len(posts))))
+	if rb < lb {
+		// todo: redirect or normal error message.
+		return c.String(http.StatusBadRequest, "no such page")
+	}
+	posts = posts[lb:rb]
+
 	// todo: cache to avoid requests to db.
 	var boards []Board
 	err = get(&boards)
@@ -73,7 +96,16 @@ func serveBoard(c echo.Context) error {
 	bv := BoardView{
 		Header:       boards,
 		CurrentBoard: *board,
+		Pages: Paging{
+			Current: uint(page),
+			Pages:   make([]uint, pages),
+		},
 	}
+	// Generate total pages indexes.
+	for i := range bv.Pages.Pages {
+		bv.Pages.Pages[i] = uint(i)
+	}
+
 	// Create view entry for every thread on board.
 	for i := range posts {
 		bv.Threads = append(bv.Threads, ThreadView{

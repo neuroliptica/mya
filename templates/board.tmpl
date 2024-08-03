@@ -25,8 +25,13 @@
         <a class="button board-nav-item">Neuer Thread</a>
         <a class="button board-nav-item">Katalog</a>
         <div class="board-pagination">
-          <span class="board-pagination-page board-pagination-page-current">0</span>
-          <a class="button board-pagination-page" href="?page=1">1</a>
+          {{ range .Pages.Pages }}
+            {{ if eq $.Pages.Current . }}
+              <span class="board-pagination-page board-pagination-page-current">{{.}}</span>
+            {{ else }}
+              <a class="button board-pagination-page" href="?page={{.}}">{{.}}</a>
+            {{ end }}
+          {{ end }}
         </div>
       </nav>
       <hr class="separator">
