@@ -54,6 +54,11 @@
             <footer class="post-footer"></footer>
           </article>
           <div class="omit">
+          {{ if eq .Missed 1 }}
+            <div class="omit-info">{{ .Missed }} Post fehlend</div>
+          {{ else if ne .Missed 0 }}
+            <div class="omit-info">{{ .Missed }} Posts fehlend</div>
+          {{ end }}
             <a class="omit-link" href="/{{ $.CurrentBoard.Link }}/{{ .OP.ID }}">zum Thread</a>
           </div>
         {{ range .Replies }}
