@@ -42,6 +42,9 @@ func main() {
 	// serve pages.
 	e.GET("/", serveMain)
 	e.GET("/:board", serveBoard)
+	e.GET("/:board/:id", func(c echo.Context) error {
+		return c.String(http.StatusOK, c.Param("id"))
+	})
 
 	// rest api.
 	api := e.Group("/api")

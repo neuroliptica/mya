@@ -37,7 +37,7 @@
       <hr class="separator">
       <section id="index-thread-container" class="thread-container">
 
-      {{ range .Threads }}
+      {{ range $index, $op := .Threads }}
         <article id="thread-{{ .OP.ID }}" class="thread thread-index" data-id="{{ .OP.ID }}">
           <article id="post-{{ .OP.ID }}" class="post post-op post-file post-by-anon" data-id="{{ .OP.ID }}">
             <header class="post-header">
@@ -56,6 +56,22 @@
           <div class="omit">
             <a class="omit-link" href="/{{ $.CurrentBoard.Link }}/{{ .OP.ID }}">zum Thread</a>
           </div>
+        {{ range .Replies }}
+          <article id="post-{{ .ID }}" class="post post-by-anon" data-id="{{ .ID }}">
+            <header class="post-header">
+              <a class="post-header-item post-id" href="/{{ $.CurrentBoard.Link }}/{{ $op.OP.ID }}#{{ .ID }}">#{{ .ID }}</a>
+              <h3 class="post-header-item post-subject"></h3>
+              <time class="post-header-item post-time">{{ .FormatTimestamp }}</time>
+            </header>
+            <section class="post-body">
+              <div class="post-files"></div>
+              <blockquote class="post-message">
+                {{ .Text }}
+              </blockquote>
+            </section>
+            <footer class="post-footer"></footer>
+          </article>
+        {{ end }}
           <hr class="separator">
         </article>
       {{ end }}

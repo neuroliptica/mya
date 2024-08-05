@@ -22,6 +22,7 @@ a {
   border: none;
   outline: none;
   text-decoration: none !important;
+  color: #ccafdd;;
 }
 
 .header {
@@ -31,7 +32,7 @@ a {
   width: 100%;
   height: 30px;
   display: flex;
-  font-size: 16px;
+  font-size: 14px;
   border-bottom: none;
   background: #282a2e;
   box-shadow: 0 0 4px 0 #111;
@@ -208,12 +209,12 @@ hr {
   word-break: break-word;
 }
 
-.post-header {
-  width: 100%;
+.post-op, .post-header {
+  font-size: larger;
 }
 
-.post-op, .post-header {
-  font-size: large;
+.post-header {
+  width: 100%;
 }
 
 .post-header-item {
@@ -223,6 +224,15 @@ hr {
 .post-op .post-id {
   color: #ccafdd;
 }
+
+.post-id {
+  color: #a5a5a5;
+}
+
+.post-id:hover {
+  color: #ccafdd;
+}
+
 .post-header-item ~ .post-header-item {
   margin-left: 10px;
 }
@@ -239,10 +249,10 @@ h3 {
 }
 
 .post-time {
-  font-size: 16px;
+  font-size: 14px;
   float: right;
   position: relative;
-  bottom: -2px;
+  bottom: -3px;
   cursor: default;
   color: #868686;
 }
@@ -255,6 +265,11 @@ h3 {
 
 .post-op .post-body {
   margin: 10px 0;
+}
+
+.post-body {
+  width: 100%;
+  margin: 6px 0;
 }
 
 .post-message {

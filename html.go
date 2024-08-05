@@ -62,6 +62,7 @@ func serveBoard(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
 	}
+
 	var posts []Post
 	err = get(&posts, "board = ? AND parent = ?", board.Link, 0)
 	if err != nil {
@@ -108,10 +109,26 @@ func serveBoard(c echo.Context) error {
 
 	// Create view entry for every thread on board.
 	for i := range posts {
-		bv.Threads = append(bv.Threads, ThreadView{
+		tv := ThreadView{
 			OP: posts[i],
-			// Replies: ...
+		}
+		// get replies
+		res := db.Where(&Post{
+			Board:  board.Link,
+			Parent: posts[i].ID,
+		}).
+			Order("id desc").
+			Limit(3).
+			Find(&tv.Replies)
+
+		if res.Error != nil {
+			return c.String(http.StatusInternalServerError, err.Error())
+		}
+
+		sort.Slice(tv.Replies, func(i, j int) bool {
+			return tv.Replies[i].ID < tv.Replies[j].ID
 		})
+		bv.Threads = append(bv.Threads, tv)
 	}
 	// Render board page.
 	view := new(strings.Builder)
