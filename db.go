@@ -32,11 +32,11 @@ func migrate() error {
 }
 
 // Check if record with provided conditions exists.
-func checkRecord[T any](schema *T) (*T, error) {
+func checkRecord[T any](schema *T, conds ...any) (*T, error) {
 	var res T
 	result := db.
 		Where(schema).
-		First(&res)
+		First(&res, conds...)
 
 	if result.Error != nil {
 		return nil, result.Error

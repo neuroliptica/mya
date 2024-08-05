@@ -61,6 +61,7 @@ func createPost(c echo.Context) error {
 
 	post.IpHash = c.RealIP()
 	post.LastBump = time.Now()
+	// todo: check len for post.name
 	if post.Name == "" {
 		post.Name = "Anonymous"
 	}
@@ -76,21 +77,24 @@ func createPost(c echo.Context) error {
 			})
 			return err
 		},
-		// Check if thread exists and not closed.
+		// Check if thread exists and not closed (todo).
 		func() error {
 			if post.Parent == 0 {
 				return nil
 			}
-			_, err := checkRecord(&Post{
-				Parent: 0,
-				ID:     post.Parent,
-			})
+			_, err := checkRecord(
+				&Post{},
+				"parent = 0 AND board = ? AND id = ?",
+				post.Board,
+				post.Parent,
+			)
+
 			return err
 		},
 		// Check if post subject is valid.
 		func() error {
 			l := len(post.Subject)
-			if l == 0 {
+			if l == 0 && post.Parent != 0 {
 				return errors.New("empty subject")
 			}
 			if l > 80 {
