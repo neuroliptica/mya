@@ -78,7 +78,14 @@ func createPost(c echo.Context) error {
 		},
 		// Check if thread exists and not closed.
 		func() error {
-			return nil
+			if post.Parent == 0 {
+				return nil
+			}
+			_, err := checkRecord(&Post{
+				Parent: 0,
+				ID:     post.Parent,
+			})
+			return err
 		},
 		// Check if post subject is valid.
 		func() error {
