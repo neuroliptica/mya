@@ -14,7 +14,14 @@ type MainView struct {
 	Header []Board
 }
 
+type BoardsInfo struct {
+	Header       []Board
+	CurrentBoard Board
+}
+
 type ThreadView struct {
+	BoardsInfo
+
 	OP      Post
 	Replies []Post
 
@@ -28,26 +35,27 @@ type Paging struct {
 }
 
 type BoardView struct {
-	CurrentBoard Board
-	Header       []Board
-	Threads      []ThreadView
+	BoardsInfo
+	Threads []ThreadView
 
 	Pages Paging
 }
 
 func serveMain(c echo.Context) error {
 	view := new(strings.Builder)
-	// Get all boards to display in header.
 	var boards []Board
-	// todo: cache to avoid requests to db.
-	err := get(&boards)
-	if err != nil {
-		return c.String(http.StatusInternalServerError, err.Error())
+	serve := Maybe{
+		func() error {
+			// get boards for header.
+			// todo: cache to avoid requests to db.
+			return get(&boards)
+		},
+		func() error {
+			return templates[MainTemplate].
+				Execute(view, MainView{Header: boards})
+		},
 	}
-	err = templates[MainTemplate].
-		Execute(view, MainView{
-			Header: boards,
-		})
+	err := serve.Eval()
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
@@ -62,15 +70,29 @@ func serveBoard(c echo.Context) error {
 		page = 0
 	}
 
-	// Check if board exists.
-	board, err := checkRecord(&Board{Link: b})
-	if err != nil {
-		return c.String(http.StatusBadRequest, err.Error())
-	}
+	var (
+		board  *Board
+		posts  []Post
+		boards []Board
+	)
 
-	// Get all threads for current board.
-	var posts []Post
-	err = get(&posts, "board = ? AND parent = ?", board.Link, 0)
+	initialization := Maybe{
+		// Check if board exists.
+		func() (err error) {
+			board, err = checkRecord(&Board{Link: b})
+			return err
+		},
+		// Get all threads for current board.
+		func() error {
+			return get(&posts, "board = ? AND parent = 0", board.Link)
+		},
+		// Get all boards for header.
+		// todo: cache to avoid requests to db.
+		func() error {
+			return get(&boards)
+		},
+	}
+	err = initialization.Eval()
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
 	}
@@ -96,17 +118,11 @@ func serveBoard(c echo.Context) error {
 	}
 	posts = posts[lb:rb]
 
-	// Get all boards for header.
-	// todo: cache to avoid requests to db.
-	var boards []Board
-	err = get(&boards)
-	if err != nil {
-		return c.String(http.StatusInternalServerError, err.Error())
-	}
-
 	bv := BoardView{
-		Header:       boards,
-		CurrentBoard: *board,
+		BoardsInfo: BoardsInfo{
+			Header:       boards,
+			CurrentBoard: *board,
+		},
 		Pages: Paging{
 			Current: uint(page),
 			Pages:   make([]uint, pages),
@@ -123,31 +139,37 @@ func serveBoard(c echo.Context) error {
 			OP:     posts[i],
 			Missed: 0,
 		}
-		// Get last 3 replies.
-		res := db.Where(&Post{
-			Board:  board.Link,
-			Parent: posts[i].ID,
-		}).
-			Order("id desc").
-			Limit(3).
-			Find(&tv.Replies)
+		replies := Maybe{
+			// Get last 3 replies.
+			func() error {
+				res := db.Where(&Post{
+					Board:  board.Link,
+					Parent: posts[i].ID,
+				}).
+					Order("id desc").
+					Limit(3).
+					Find(&tv.Replies)
 
-		if res.Error != nil {
+				return res.Error
+			},
+			// Get total amount of replies.
+			func() error {
+				res := db.Model(&Post{}).
+					Where("board = ? AND parent = ?", board.Link, tv.OP.ID).
+					Count(&tv.Missed)
+
+				return res.Error
+			},
+		}
+		err := replies.Eval()
+		if err != nil {
 			return c.String(http.StatusInternalServerError, err.Error())
 		}
+
 		// Reverse the last 3 replies order.
 		sort.Slice(tv.Replies, func(i, j int) bool {
 			return tv.Replies[i].ID < tv.Replies[j].ID
 		})
-
-		// Get total amount of replies.
-		res = db.Model(&Post{}).
-			Where("board = ? AND parent = ?", board.Link, tv.OP.ID).
-			Count(&tv.Missed)
-
-		if res.Error != nil {
-			return c.String(http.StatusInternalServerError, err.Error())
-		}
 
 		tv.Missed -= int64(len(tv.Replies))
 		bv.Threads = append(bv.Threads, tv)
@@ -156,6 +178,65 @@ func serveBoard(c echo.Context) error {
 	// Render board page.
 	view := new(strings.Builder)
 	err = templates[BoardTemplate].Execute(view, bv)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.HTML(http.StatusOK, view.String())
+}
+
+func serveThread(c echo.Context) error {
+	b := c.Param("board")
+
+	var (
+		id    int
+		board *Board
+		op    *Post
+	)
+
+	initialization := Maybe{
+		func() (err error) {
+			id, err = strconv.Atoi(c.Param("id"))
+			return err
+		},
+		func() (err error) {
+			board, err = checkRecord(&Board{Link: b})
+			return err
+		},
+		func() (err error) {
+			op, err = checkThread(board.Link, uint(id))
+			return err
+		},
+	}
+
+	err := initialization.Eval()
+	if err != nil {
+		return c.String(http.StatusBadRequest, err.Error())
+	}
+
+	tv := ThreadView{
+		BoardsInfo: BoardsInfo{
+			CurrentBoard: *board,
+		},
+		OP: *op,
+	}
+
+	requests := Maybe{
+		func() (err error) {
+			return get(&tv.Header)
+		},
+		func() (err error) {
+			return get(&tv.Replies, "board = ? AND parent = ?", b, op.ID)
+		},
+	}
+
+	err = requests.Eval()
+	if err != nil {
+		return c.String(http.StatusInternalServerError, err.Error())
+	}
+
+	view := new(strings.Builder)
+	err = templates[ThreadTemplate].Execute(view, tv)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}

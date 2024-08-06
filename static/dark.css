@@ -241,6 +241,60 @@ hr {
   color: #ccafdd;
 }
 
+.post-name {
+  color: #8a8a8a;
+  cursor: default;
+  font-size: 16px;
+}
+
+.post-footer {
+  width: 100%;
+}
+
+.post-backlinks {
+  font-size: smaller;
+}
+
+.post-controls {
+  width: 100%;
+}
+
+.control {
+  display: inline-block;
+  font-size: 17px;
+  padding: 0;
+  text-align: center;
+  background: none;
+  border: none;
+  color: #86798a;
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+  transition: .1s;
+}
+
+.post-quote-control {
+  float: right;
+  margin-right: 0;
+  padding: 0 0 0 15px;
+  font-size: 13px;
+}
+
+.post-op .post-quote-control {
+  float: none;
+}
+
+.fa {
+  display: inline-block;
+  font: normal normal normal 14px/1 FontAwesome;
+  font-size: inherit;
+  text-rendering: auto;
+}
+
+.fa-reply::before {
+  content: "\f112";
+}
+
 h3 {
   display: inline;
   font-size: inherit;

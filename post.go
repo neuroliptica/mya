@@ -35,6 +35,10 @@ func migratePost() error {
 	return db.AutoMigrate(&Post{})
 }
 
+func checkThread(board string, id uint) (*Post, error) {
+	return checkRecord(&Post{}, "parent = 0 AND board = ? AND id = ?", board, id)
+}
+
 // Update lastbump field.
 func bump(thread uint) error {
 	result := db.Model(&Post{}).
@@ -82,13 +86,7 @@ func createPost(c echo.Context) error {
 			if post.Parent == 0 {
 				return nil
 			}
-			_, err := checkRecord(
-				&Post{},
-				"parent = 0 AND board = ? AND id = ?",
-				post.Board,
-				post.Parent,
-			)
-
+			_, err := checkThread(post.Board, post.Parent)
 			return err
 		},
 		// Check if post subject is valid.

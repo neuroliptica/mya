@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="/static/dark.css">
+  <title>{{ .OP.Subject }} - meowchan</title>
+</head>
+<body>
+  <header class="header">
+    <a class="header-item header-board" href="/" title="Main page">main_page</a>
+    {{ range .Header }}
+      <a class="header-item header-board" href="/{{ .Link }}" title="{{ .Name }}">{{ .Name }}</a>
+    {{ end }}
+    <div class="header-spacer"></div>
+    <a class="header-item header-board" href="/">info</a>
+    <a class="header-item header-board" href="/">settings</a>
+    <a class="header-item header-board" href="/">mod_log</a>
+  </header>
+  <main class="main">
+    <section id="threads" class="board">
+      <h1 class="page-title">
+        {{ .OP.Subject }}
+      </h1>
+      <hr class="separator">
+      <section id="index-thread-container" class="thread-container">
+        <article id="thread-{{ .OP.ID }}" class="thread thread-index" data-id="{{ .OP.ID }}">
+          <article id="post-{{ .OP.ID }}" class="post post-op post-file post-by-anon" data-id="{{ .OP.ID }}">
+            <header class="post-header">
+              <a class="post-header-item post-id" href="/{{ .CurrentBoard.Link }}/{{ .OP.ID }}">#{{ .OP.ID }}</a>
+              <span class="post-header-item post-name">Мяука</span>
+              <time class="post-header-item post-time">{{ .OP.FormatTimestamp }}</time>
+            </header>
+            <section class="post-body">
+              <div class="post-files"></div>
+              <blockquote class="post-message">
+                {{ .OP.Text }}
+              </blockquote>
+            </section>
+            <footer class="post-footer">
+              <div class="post-controls">
+                <a class="control post-control post-quote-control trigger-quote-post">
+                  <i class="fa fa-reply trigger-quote-post"></i>
+                </a>
+              </div>
+            </footer>
+          </article>
+
+          {{ range .Replies }}
+          <article id="post-{{ .ID }}" class="post post-by-anon" data-id="{{ .ID }}">
+            <header class="post-header">
+              <a class="post-header-item post-{{ .ID }}" href="/{{ $.CurrentBoard.Link }}/{{ $.OP.ID}}#{{ .ID }}">#{{ .ID }}</a>
+              <h3 class="post-header-item post-subject"></h3>
+              <time class="post-header-item post-time">{{ .FormatTimestamp }}</time>
+            </header>
+            <section class="post-body">
+              <div class="post-files"></div>
+              <blockquote class="post-message">
+                {{ .Text }}
+              </blockquote>
+            </section>
+            <footer class="post-footer">
+              <div class="post-backlinks"></div>
+              <div class="post-controls">
+                <a class="control post-control post-quote-control trigger-quote-post">
+                  <i class="fa fa-reply trigger-quote-post"></i>
+                </a>
+              </div>
+            </footer>
+          </article>
+          {{ end }}
+
+        </article>
+      </section>
+      <hr class="separator">
+      <nav class="thread-nav">
+        <a class="button thread-nav-item thread-nav-back" href="/{{ .CurrentBoard.Link }}">Zurück</a>
+        <a class="button thread-nav-item thread-nav-kata" href="/">Katalog</a>
+        <a class="button thread-nav-item thread-nav-kata" href="/">Antworten</a>
+      </nav>
+    </section>
+  </main>
+</body>
+</html>
