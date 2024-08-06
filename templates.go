@@ -8,8 +8,9 @@ import (
 
 // Template names as string constants.
 const (
-	MainTemplate  = "main_page"
-	BoardTemplate = "board"
+	MainTemplate   = "main_page"
+	BoardTemplate  = "board"
+	ThreadTemplate = "thread"
 )
 
 // Combine compiled template with it's file representation.
@@ -43,6 +44,9 @@ var templates = map[string]*Template{
 	},
 	BoardTemplate: {
 		Path: "templates/board.tmpl",
+	},
+	ThreadTemplate: {
+		Path: "templates/thread.tmpl",
 	},
 }
 
