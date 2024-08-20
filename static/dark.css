@@ -345,3 +345,50 @@ h3 {
   font-weight: 600;
   color: #b399d4;
 }
+
+.reply-form {
+  text-align: left;
+  padding-bottom: 10px;
+}
+
+.form-raw {
+  display: flex;
+}
+
+.form-input-raw {
+  display: inline;
+  background-color: #282a2e;
+  color: #c5c8c6;
+  border: 1px solid #734F6D;
+  margin-right: 5px;
+  margin-bottom: 5px;
+  width: 180px;
+}
+
+.form-button {
+  background-color: #282a2e;
+  color: #c5c8c6;
+  border: 1px solid #734F6D;
+  margin-right: 5px;
+  margin-bottom: 5px;
+  min-width: 100px;
+}
+
+.form-sage {
+  background-color: #282a2e;
+  color: #c5c8c6;
+  border: 1px solid #734F6D;
+  margin-right: 5px;
+  margin-bottom: 5px;
+  min-width: 100px;
+}
+
+.form-button:hover {
+  border: 1px solid #ccafdd;
+}
+
+.form-postarea {
+  position: relative;
+  min-width: 475px;
+  min-height: 70px;
+}
