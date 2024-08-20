@@ -348,7 +348,8 @@ h3 {
 
 .reply-form {
   text-align: left;
-  padding-bottom: 10px;
+  padding-top: 15px;
+  padding-bottom: 5px;
 }
 
 .form-raw {

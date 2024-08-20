@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <link rel="stylesheet" href="static/dark.css">
+  <script type="text/javascript" src="static/toggle.js"></script>
   <title>{{ .CurrentBoard.Name }} - meowchan</title>
 </head>
 <body>
@@ -21,7 +22,20 @@
       <h1 class="page-title">
         /{{ .CurrentBoard.Link }}/ - {{ .CurrentBoard.Name }}
       </h1>
-      <div class="reply-form" id="reply-form">
+      <nav class="board-nav">
+        <a class="button board-nav-item" onclick="changeVisible('reply-form');">Neuer Thread</a>
+        <a class="button board-nav-item">Katalog</a>
+        <div class="board-pagination">
+          {{ range .Pages.Pages }}
+            {{ if eq $.Pages.Current . }}
+              <span class="board-pagination-page board-pagination-page-current">{{.}}</span>
+            {{ else }}
+              <a class="button board-pagination-page" href="?page={{.}}">{{.}}</a>
+            {{ end }}
+          {{ end }}
+        </div>
+      </nav>
+      <div class="reply-form" id="reply-form" style="display: none;">
         <form id="post-form" action="/api/post" method="post" enctype="multipart/form-data">
           <input type="hidden" name="board" value="{{ .CurrentBoard.Link }}">
           <input type="hidden" name="parent" value="0">
@@ -41,19 +55,6 @@
           </div>
         </form> 
       </div>
-      <nav class="board-nav">
-        <a class="button board-nav-item">Neuer Thread</a>
-        <a class="button board-nav-item">Katalog</a>
-        <div class="board-pagination">
-          {{ range .Pages.Pages }}
-            {{ if eq $.Pages.Current . }}
-              <span class="board-pagination-page board-pagination-page-current">{{.}}</span>
-            {{ else }}
-              <a class="button board-pagination-page" href="?page={{.}}">{{.}}</a>
-            {{ end }}
-          {{ end }}
-        </div>
-      </nav>
       <hr class="separator">
       <section id="index-thread-container" class="thread-container">
 
