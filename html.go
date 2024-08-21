@@ -41,6 +41,10 @@ type BoardView struct {
 	Pages Paging
 }
 
+func (b BoardView) LastId() int {
+	return len(b.Threads) - 1
+}
+
 func serveMain(c echo.Context) error {
 	view := new(strings.Builder)
 	var boards []Board

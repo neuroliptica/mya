@@ -98,12 +98,26 @@
             <footer class="post-footer"></footer>
           </article>
         {{ end }}
+        {{ if ne $index $.LastId }}
           <hr class="separator">
+        {{ end }}
         </article>
       {{ end }}
 
       </section>
       <hr class="separator">
+      <nav class="board-nav">
+        <a class="button board-nav-item">Katalog</a>
+        <div class="board-pagination">
+          {{ range .Pages.Pages }}
+            {{ if eq $.Pages.Current . }}
+              <span class="board-pagination-page board-pagination-page-current">{{.}}</span>
+            {{ else }}
+              <a class="button board-pagination-page" href="?page={{.}}">{{.}}</a>
+            {{ end }}
+          {{ end }}
+        </div>
+      </nav>
     </section>
   </main>
 </body>
