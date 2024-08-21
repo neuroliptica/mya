@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -72,7 +73,19 @@ func createPost(c echo.Context) error {
 	checks := Maybe{
 		// Check if ip not banned.
 		func() error {
-			return nil
+			h := hash(c.RealIP())
+			b, err := checkRecord(&Ban{
+				Hash: h,
+			})
+			if err != nil {
+				// missing.
+				logger.Info().Msg(err.Error())
+				return nil
+			}
+			if b.hasExpired() {
+				return nil
+			}
+			return fmt.Errorf("banned until %v for %s", b.Until, b.Reason)
 		},
 		// Check if board exists.
 		func() error {

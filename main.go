@@ -59,6 +59,7 @@ func main() {
 
 	// moder.
 	api.POST("/create_board", createBoard)
+	// api.GET("/ban_yourself", bantest)
 
 	logger.Info().Msg(e.Start(":3000").Error())
 }
