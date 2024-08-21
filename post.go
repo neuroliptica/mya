@@ -92,8 +92,8 @@ func createPost(c echo.Context) error {
 		// Check if post subject is valid.
 		func() error {
 			l := len(post.Subject)
-			if l == 0 && post.Parent != 0 {
-				return errors.New("empty subject")
+			if l == 0 && post.Parent == 0 {
+				return errors.New("empty subject for thread")
 			}
 			if l > 80 {
 				post.Subject = post.Subject[:80]
