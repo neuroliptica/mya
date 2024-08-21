@@ -35,7 +35,7 @@
         </div>
       </nav>
       <div class="reply-form" id="reply-form" style="display: none;">
-        <form id="post-form" action="/api/post" method="post" enctype="multipart/form-data">
+        <form id="post-form">
           <input type="hidden" name="board" value="{{ .CurrentBoard.Link }}">
           <input type="hidden" name="parent" value="0">
           <div class="form-raw">
