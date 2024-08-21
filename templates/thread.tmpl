@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <link rel="stylesheet" href="/static/dark.css">
+  <script type="text/javascript" src="/static/toggle.js"></script>
   <title>{{ .OP.Subject }} - meowchan</title>
 </head>
 <body>
@@ -75,8 +76,28 @@
       <nav class="thread-nav">
         <a class="button thread-nav-item thread-nav-back" href="/{{ .CurrentBoard.Link }}">Zurück</a>
         <a class="button thread-nav-item thread-nav-kata" href="/">Katalog</a>
-        <a class="button thread-nav-item thread-nav-kata" href="/">Antworten</a>
+        <a class="button thread-nav-item thread-nav-kata" onclick="changeVisible('reply-form');">Antworten</a>
       </nav>
+      <div class="reply-form" id="reply-form" style="display: none;">
+        <form id="post-form" action="/api/post" method="post" enctype="multipart/form-data">
+          <input type="hidden" name="board" value="{{ .CurrentBoard.Link }}">
+          <input type="hidden" name="parent" value="{{ .OP.ID }}">
+          <div class="form-raw">
+            <input class="form-input-raw" type="text" id="subject" name="subject" placeholder="subject">
+            <input class="form-input-raw" type="text" id="name" name="name" placeholder="name">
+            <input id="submit" type="submit" name="submit" value="post" class="form-button">
+          </div>
+          <div class="form-raw">
+            <textarea class="form-input-raw form-postarea" placeholder="max symbols: 2000" name="text"></textarea>
+          </div>
+          <div class="form-raw">
+            <div class="form-sage">
+              <input id="sage" type="checkbox" name="sage" value="true">
+              <span title="don't bump this thread">sage</span>
+            </div>
+          </div>
+        </form> 
+      </div>
     </section>
   </main>
 </body>
