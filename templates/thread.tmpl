@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <link rel="stylesheet" href="/static/dark.css">
-  <script type="text/javascript" src="/static/toggle.js"></script>
   <title>{{ .OP.Subject }} - meowchan</title>
 </head>
 <body>
@@ -79,13 +78,13 @@
         <a class="button thread-nav-item thread-nav-kata" onclick="changeVisible('reply-form');">Antworten</a>
       </nav>
       <div class="reply-form" id="reply-form" style="display: none;">
-        <form id="post-form" action="/api/post" method="post" enctype="multipart/form-data">
+        <form id="post-form">
           <input type="hidden" name="board" value="{{ .CurrentBoard.Link }}">
           <input type="hidden" name="parent" value="{{ .OP.ID }}">
           <div class="form-raw">
             <input class="form-input-raw" type="text" id="subject" name="subject" placeholder="subject">
             <input class="form-input-raw" type="text" id="name" name="name" placeholder="name">
-            <input id="submit" type="submit" name="submit" value="post" class="form-button">
+            <input id="submit" type="submit" value="post" class="form-button">
           </div>
           <div class="form-raw">
             <textarea class="form-input-raw form-postarea" placeholder="max symbols: 2000" name="text"></textarea>
@@ -101,4 +100,6 @@
     </section>
   </main>
 </body>
+<script type="text/javascript" src="/static/toggle.js"></script>
+<script type="text/javascript" src="/static/form.js"></script>
 </html>
