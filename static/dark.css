@@ -1,6 +1,6 @@
 body {
-  background-color: #131315;
-  color: #c5c8c6;
+  background-color: #18181a;
+  color: #c5c8c7;
   font-size: 14px;
   word-wrap: break-word;
   margin-top: 30px;
@@ -21,7 +21,7 @@ a {
   border: none;
   outline: none;
   text-decoration: none !important;
-  color: #ccafdd;;
+  color: #afd2dd;
 }
 
 .header {
@@ -58,7 +58,7 @@ a {
 }
 
 .header-item:hover {
-  color: #b294bb;
+  color: #fff;
 }
 
 .header-board {
@@ -83,7 +83,7 @@ a {
   font-size: 3em;
   font-weight: 700;
   text-align: left;
-  color: #ccafdd;
+  color: #afd2dd;
 }
 
 .board {
@@ -101,7 +101,7 @@ a {
   box-sizing: border-box;
   display: inline-block;
   background: transparent;
-  color: #86798a;
+  color: #79828a;
   border-radius: 2px;
   padding: 5px 10px;
   text-align: center;
@@ -111,13 +111,13 @@ a {
 }
 
 .button, .button:not(:disabled):hover {
-  border: 1px solid #94809f;
+  border: 1px solid #80959f;
   transition: .1s linear;
 }
 
 .button:not(:disabled):hover {
-  color: #d7c4e2;
-  box-shadow: inset 0 1px 1px rgba(0,0,0,.275),0 0 8px rgba(149,92,158,.85);
+  color: #c4cfe2;
+  box-shadow: inset 0 1px 1px rgba(0,0,0,.275),0 0 8px rgba(92,137,158,.85);
 }
 
 .button:disabled {
@@ -148,7 +148,7 @@ a {
 
 .board-pagination-page-current {
   color: #fff;
-  border: 1px solid #94809f;
+  border: 1px solid #80959f;
   border-radius: 2px;
   opacity: 1;
 }
@@ -202,7 +202,7 @@ hr {
   box-sizing: border-box;
   min-width: 200px;
   max-width: 1000px;
-  background: #333036;
+  background: #303136;
   box-shadow: 1px 1px 9px 0 rgba(0,0,0,.2);
   word-wrap: break-word;
   word-break: break-word;
@@ -221,7 +221,7 @@ hr {
 }
 
 .post-op .post-id {
-  color: #ccafdd;
+  color: #afd2dd;
 }
 
 .post-id {
@@ -229,7 +229,7 @@ hr {
 }
 
 .post-id:hover {
-  color: #ccafdd;
+  color: #afd2dd;
 }
 
 .post-header-item ~ .post-header-item {
@@ -237,7 +237,7 @@ hr {
 }
 
 .post-subject {
-  color: #ccafdd;
+  color: #afd2dd;
 }
 
 .post-name {
@@ -342,7 +342,7 @@ h3 {
 .omit-link {
   font-size: 16px;
   font-weight: 600;
-  color: #b399d4;
+  color: #99c9d4;
 }
 
 .reply-form {
@@ -359,7 +359,7 @@ h3 {
   display: inline;
   background-color: #282a2e;
   color: #c5c8c6;
-  border: 1px solid #734F6D;
+  border: 1px solid #4F6273;
   margin-right: 5px;
   margin-bottom: 5px;
   width: 180px;
@@ -368,7 +368,7 @@ h3 {
 .form-button {
   background-color: #282a2e;
   color: #c5c8c6;
-  border: 1px solid #734F6D;
+  border: 1px solid #4F6273;
   margin-right: 5px;
   margin-bottom: 5px;
   min-width: 100px;
@@ -377,14 +377,14 @@ h3 {
 .form-sage {
   background-color: #282a2e;
   color: #c5c8c6;
-  border: 1px solid #734F6D;
+  border: 1px solid #4F6273;
   margin-right: 5px;
   margin-bottom: 5px;
   min-width: 100px;
 }
 
 .form-button:hover {
-  border: 1px solid #ccafdd;
+  border: 1px solid #afd2dd;
 }
 
 .form-postarea {
