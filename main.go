@@ -19,6 +19,10 @@ func main() {
 			return assignSqlite("dev.db")
 		},
 		migrate,
+		func() error {
+			initCaptchas()
+			return nil
+		},
 	}
 
 	err := initialization.Eval()
@@ -48,6 +52,11 @@ func main() {
 	api := e.Group("/api")
 	api.GET("/get_boards", getBoards)
 	api.POST("/post", createPost)
+
+	// captcha
+	api.GET("/captcha/new", newCaptcha)
+	api.GET("/captcha/get", getCaptcha)
+
 	// moder.
 	api.POST("/create_board", createBoard)
 
