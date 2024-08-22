@@ -330,6 +330,7 @@ h3 {
   padding: 1px 0;
   max-height: 500px;
   overflow-y: auto;
+  white-space: pre-line;
 }
 
 .omit {
@@ -392,3 +393,4 @@ h3 {
   min-width: 475px;
   min-height: 70px;
 }
+
