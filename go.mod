@@ -1,4 +1,4 @@
-module nyanchan
+module mya
 
 go 1.21.3
 
