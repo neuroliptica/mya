@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"html/template"
 	"net/http"
 	"time"
 
@@ -30,6 +31,10 @@ type Post struct {
 
 func (t Post) FormatTimestamp() string {
 	return t.CreatedAt.Format("02/01/2006 15:04:05")
+}
+
+func (t Post) RenderedText() template.HTML {
+	return replaceMarkdown(t.Text)
 }
 
 func migratePost() error {
