@@ -8,7 +8,6 @@ import (
 )
 
 var (
-	// global db entry.
 	db *gorm.DB
 )
 
@@ -22,13 +21,11 @@ func assignSqlite(name string) error {
 }
 
 func migrate() error {
-	// declaring migrations.
 	migrations := Maybe{
 		migrateBoard,
 		migratePost,
 		migrateBan,
 	}
-
 	return migrations.Eval()
 }
 

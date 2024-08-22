@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/rs/zerolog/log"
 )
 
 type Post struct {
@@ -33,6 +34,7 @@ func (t Post) FormatTimestamp() string {
 	return t.CreatedAt.Format("02/01/2006 15:04:05")
 }
 
+// Replace markdown tags with html tags.
 func (t Post) RenderedText() template.HTML {
 	return replaceMarkdown(t.Text)
 }
@@ -71,7 +73,7 @@ func createPost(c echo.Context) error {
 
 	post.IpHash = hash(c.RealIP())
 	post.LastBump = time.Now()
-	// todo: check len for post.name
+	// todo(zvezdochka): check len for post.name
 	if post.Name == "" {
 		post.Name = "Anonymous"
 	}
@@ -82,8 +84,8 @@ func createPost(c echo.Context) error {
 				Hash: post.IpHash,
 			})
 			if err != nil {
-				// missing.
-				logger.Info().Msg(err.Error())
+				// We will get non-nil error also if there is no record.
+				log.Debug().Msg(err.Error())
 				return nil
 			}
 			if b.hasExpired() {

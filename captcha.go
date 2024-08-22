@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -14,11 +15,11 @@ const (
 )
 
 var (
-	captchas *CaptchaMap
+	captchas *Storage
 )
 
 func initCaptchas() {
-	captchas = NewCaptchaMap()
+	captchas = NewStorage()
 	go captchas.Cleanup()
 }
 
@@ -29,20 +30,20 @@ type captcha struct {
 	created time.Time
 }
 
-type CaptchaMap struct {
+type Storage struct {
 	Map map[string]*captcha
 	Mu  *sync.RWMutex
 }
 
-func NewCaptchaMap() *CaptchaMap {
-	return &CaptchaMap{
+func NewStorage() *Storage {
+	return &Storage{
 		Map: make(map[string]*captcha),
 		Mu:  &sync.RWMutex{},
 	}
 }
 
 // Get captcha by id, thread safe.
-func (c *CaptchaMap) Get(id string) (*captcha, bool) {
+func (c *Storage) Get(id string) (*captcha, bool) {
 	c.Mu.RLock()
 	defer c.Mu.RUnlock()
 
@@ -51,7 +52,7 @@ func (c *CaptchaMap) Get(id string) (*captcha, bool) {
 }
 
 // Check if provided value is valid captcha value.
-func (c *CaptchaMap) Check(value string, id string) bool {
+func (c *Storage) Check(value string, id string) bool {
 	v, ok := c.Get(id)
 	if !ok || v == nil {
 		return false
@@ -64,7 +65,7 @@ func (c *CaptchaMap) Check(value string, id string) bool {
 }
 
 // Get image for provided id.
-func (c *CaptchaMap) GetImage(id string) ([]byte, error) {
+func (c *Storage) GetImage(id string) ([]byte, error) {
 	v, ok := c.Get(id)
 	if !ok || v == nil {
 		return nil, errors.New("invalid id or captcha expired")
@@ -74,7 +75,7 @@ func (c *CaptchaMap) GetImage(id string) ([]byte, error) {
 }
 
 // Create new captcha record and return it's id.
-func (c *CaptchaMap) Create(value string) string {
+func (c *Storage) Create(value string) string {
 	v := &captcha{
 		value: value,
 		// todo generate image.
@@ -91,7 +92,7 @@ func (c *CaptchaMap) Create(value string) string {
 }
 
 // Delete record from captcha map by id.
-func (c *CaptchaMap) Delete(id string) {
+func (c *Storage) Delete(id string) {
 	_, ok := c.Get(id)
 	if !ok {
 		return
@@ -103,8 +104,8 @@ func (c *CaptchaMap) Delete(id string) {
 }
 
 // Should be started in separate goroutine when init.
-func (c *CaptchaMap) Cleanup() {
-	logger.Info().Msgf(
+func (c *Storage) Cleanup() {
+	log.Info().Msgf(
 		"captcha cleanup daemon initialized with timeout %v.",
 		CleanupTimeout,
 	)
@@ -123,8 +124,8 @@ func (c *CaptchaMap) Cleanup() {
 			continue
 		}
 
-		logger.Info().Msgf("cleanup for %d captcha records.", len(r))
-		// Write lock for removing expired captchas.
+		log.Info().Msgf("cleanup for %d captcha records.", len(r))
+		// Removing expired captchas.
 		c.Mu.Lock()
 		for i := range r {
 			delete(c.Map, r[i])

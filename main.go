@@ -2,17 +2,24 @@ package main
 
 import (
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
-var (
-	// global logger instance.
-	logger = NewLogger()
-)
+func init() {
+	// Initialize default global logger.
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	log.Logger = log.Output(zerolog.ConsoleWriter{
+		Out:        os.Stderr,
+		TimeFormat: time.DateTime,
+	})
 
-func main() {
+	// Initialize other services.
 	initialization := Maybe{
 		compileTemplates,
 		func() error {
@@ -27,9 +34,11 @@ func main() {
 
 	err := initialization.Eval()
 	if err != nil {
-		logger.Fatal().Msg(err.Error())
+		log.Fatal().Msg(err.Error())
 	}
+}
 
+func main() {
 	e := echo.New()
 	e.Use(
 		LoggingMiddleware,
@@ -37,29 +46,29 @@ func main() {
 		middleware.CORS(),
 	)
 
-	// serve static files.
+	// Serve static files.
 	e.Static("/static", "static")
 	e.GET("/favicon.ico", func(c echo.Context) error {
 		return c.Redirect(http.StatusPermanentRedirect, "/static/favicon.ico")
 	})
 
-	// serve pages.
+	// Serve pages.
 	e.GET("/", serveMain)
 	e.GET("/:board", serveBoard)
 	e.GET("/:board/:id", serveThread)
 
-	// rest api.
+	// Rest api.
 	api := e.Group("/api")
 	api.GET("/get_boards", getBoards)
 	api.POST("/post", createPost)
 
-	// captcha
+	// Captcha.
 	api.GET("/captcha/new", newCaptcha)
 	api.GET("/captcha/get", getCaptcha)
 
-	// moder.
+	// Admin routes.
 	api.POST("/create_board", createBoard)
 	// api.GET("/ban_yourself", bantest)
 
-	logger.Info().Msg(e.Start(":3000").Error())
+	log.Info().Msg(e.Start(":3000").Error())
 }
