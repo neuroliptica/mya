@@ -71,10 +71,10 @@
             <footer class="post-footer"></footer>
           </article>
           <div class="omit">
-          {{ if eq .Missed 1 }}
-            <div class="omit-info">{{ .Missed }} reply omitted</div>
-          {{ else if ne .Missed 0 }}
-            <div class="omit-info">{{ .Missed }} replies omitted</div>
+          {{ if eq .Omitted 1 }}
+            <div class="omit-info">{{ .Omitted }} reply omitted</div>
+          {{ else if ne .Omitted 0 }}
+            <div class="omit-info">{{ .Omitted }} replies omitted</div>
           {{ end }}
             <a class="omit-link" href="/{{ $.CurrentBoard.Link }}/{{ .OP.ID }}">Go to thread</a>
           </div>

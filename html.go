@@ -14,35 +14,10 @@ type MainView struct {
 	Header []Board
 }
 
+// Top sticked navbar.
 type BoardsInfo struct {
 	Header       []Board
 	CurrentBoard Board
-}
-
-type ThreadView struct {
-	BoardsInfo
-
-	OP      Post
-	Replies []Post
-
-	// Total replies amount minus last three.
-	Missed int64
-}
-
-type Paging struct {
-	Current uint
-	Pages   []uint
-}
-
-type BoardView struct {
-	BoardsInfo
-	Threads []ThreadView
-
-	Pages Paging
-}
-
-func (b BoardView) LastId() int {
-	return len(b.Threads) - 1
 }
 
 func serveMain(c echo.Context) error {
@@ -65,6 +40,22 @@ func serveMain(c echo.Context) error {
 	}
 
 	return c.HTML(http.StatusOK, view.String())
+}
+
+type Paging struct {
+	Current uint
+	Pages   []uint
+}
+
+type BoardView struct {
+	BoardsInfo
+	Threads []ThreadView
+
+	Pages Paging
+}
+
+func (b BoardView) LastId() int {
+	return len(b.Threads) - 1
 }
 
 func serveBoard(c echo.Context) error {
@@ -140,8 +131,8 @@ func serveBoard(c echo.Context) error {
 	// Create view entry for every thread on board.
 	for i := range posts {
 		tv := ThreadView{
-			OP:     posts[i],
-			Missed: 0,
+			OP:      posts[i],
+			Omitted: 0,
 		}
 		replies := Maybe{
 			// Get last 3 replies.
@@ -160,7 +151,7 @@ func serveBoard(c echo.Context) error {
 			func() error {
 				res := db.Model(&Post{}).
 					Where("board = ? AND parent = ?", board.Link, tv.OP.ID).
-					Count(&tv.Missed)
+					Count(&tv.Omitted)
 
 				return res.Error
 			},
@@ -175,7 +166,7 @@ func serveBoard(c echo.Context) error {
 			return tv.Replies[i].ID < tv.Replies[j].ID
 		})
 
-		tv.Missed -= int64(len(tv.Replies))
+		tv.Omitted -= int64(len(tv.Replies))
 		bv.Threads = append(bv.Threads, tv)
 	}
 
@@ -187,6 +178,14 @@ func serveBoard(c echo.Context) error {
 	}
 
 	return c.HTML(http.StatusOK, view.String())
+}
+
+type ThreadView struct {
+	BoardsInfo
+
+	OP      Post
+	Replies []Post
+	Omitted int64
 }
 
 func serveThread(c echo.Context) error {
