@@ -64,7 +64,7 @@ func createPost(c echo.Context) error {
 		return c.String(http.StatusBadRequest, err.Error())
 	}
 
-	post.IpHash = c.RealIP()
+	post.IpHash = hash(c.RealIP())
 	post.LastBump = time.Now()
 	// todo: check len for post.name
 	if post.Name == "" {
@@ -73,9 +73,8 @@ func createPost(c echo.Context) error {
 	checks := Maybe{
 		// Check if ip not banned.
 		func() error {
-			h := hash(c.RealIP())
 			b, err := checkRecord(&Ban{
-				Hash: h,
+				Hash: post.IpHash,
 			})
 			if err != nil {
 				// missing.
