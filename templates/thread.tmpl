@@ -44,7 +44,6 @@
               </div>
             </footer>
           </article>
-
           {{ range .Replies }}
           <article id="post-{{ .ID }}" class="post post-by-anon" data-id="{{ .ID }}">
             <header class="post-header">
@@ -68,14 +67,13 @@
             </footer>
           </article>
           {{ end }}
-
         </article>
       </section>
       <hr class="separator">
       <nav class="thread-nav">
-        <a class="button thread-nav-item thread-nav-back" href="/{{ .CurrentBoard.Link }}">Zurück</a>
-        <a class="button thread-nav-item thread-nav-kata" href="/">Katalog</a>
-        <a class="button thread-nav-item thread-nav-kata" onclick="changeVisible('reply-form');">Antworten</a>
+        <a class="button thread-nav-item thread-nav-back" href="/{{ .CurrentBoard.Link }}">Return</a>
+        <a class="button thread-nav-item thread-nav-kata" href="/">Catalog</a>
+        <a class="button thread-nav-item thread-nav-kata" onclick="changeVisible('reply-form');">Reply</a>
       </nav>
       <div class="reply-form" id="reply-form" style="display: none;">
         <form id="post-form">

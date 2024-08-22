@@ -22,8 +22,8 @@
         /{{ .CurrentBoard.Link }}/ - {{ .CurrentBoard.Name }}
       </h1>
       <nav class="board-nav">
-        <a class="button board-nav-item" onclick="changeVisible('reply-form');">Neuer Thread</a>
-        <a class="button board-nav-item">Katalog</a>
+        <a class="button board-nav-item" onclick="changeVisible('reply-form');">New Thread</a>
+        <a class="button board-nav-item">Catalog</a>
         <div class="board-pagination">
           {{ range .Pages.Pages }}
             {{ if eq $.Pages.Current . }}
@@ -56,7 +56,6 @@
       </div>
       <hr class="separator">
       <section id="index-thread-container" class="thread-container">
-
       {{ range $index, $op := .Threads }}
         <article id="thread-{{ .OP.ID }}" class="thread thread-index" data-id="{{ .OP.ID }}">
           <article id="post-{{ .OP.ID }}" class="post post-op post-file post-by-anon" data-id="{{ .OP.ID }}">
@@ -75,11 +74,11 @@
           </article>
           <div class="omit">
           {{ if eq .Missed 1 }}
-            <div class="omit-info">{{ .Missed }} Post fehlend</div>
+            <div class="omit-info">{{ .Missed }} reply omitted</div>
           {{ else if ne .Missed 0 }}
-            <div class="omit-info">{{ .Missed }} Posts fehlend</div>
+            <div class="omit-info">{{ .Missed }} replies omitted</div>
           {{ end }}
-            <a class="omit-link" href="/{{ $.CurrentBoard.Link }}/{{ .OP.ID }}">zum Thread</a>
+            <a class="omit-link" href="/{{ $.CurrentBoard.Link }}/{{ .OP.ID }}">Go to thread</a>
           </div>
         {{ range .Replies }}
           <article id="post-{{ .ID }}" class="post post-by-anon" data-id="{{ .ID }}">
@@ -102,11 +101,10 @@
         {{ end }}
         </article>
       {{ end }}
-
       </section>
       <hr class="separator">
       <nav class="board-nav">
-        <a class="button board-nav-item">Katalog</a>
+        <a class="button board-nav-item">Catalog</a>
         <div class="board-pagination">
           {{ range .Pages.Pages }}
             {{ if eq $.Pages.Current . }}
