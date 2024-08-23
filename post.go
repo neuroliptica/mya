@@ -63,6 +63,8 @@ func createPost(c echo.Context) error {
 		String("subject", &post.Subject).
 		String("text", &post.Text).
 		String("board", &post.Board).
+		String("captcha_id", &post.CaptchaId).
+		String("captcha_value", &post.CaptchaValue).
 		Uint("parent", &post.Parent).
 		Bool("sage", &post.Sage).
 		BindError()
@@ -116,6 +118,20 @@ func createPost(c echo.Context) error {
 			}
 			if l > 80 {
 				post.Subject = post.Subject[:80]
+			}
+			return nil
+		},
+		// Check if captcha is valid.
+		func() error {
+			valid := captchas.Check(post.CaptchaValue, post.CaptchaId)
+			// Delete after check to unsure it won't be used.
+			captchas.Delete(post.CaptchaId)
+			log.Debug().Msgf(
+				"captcha %s was deleted",
+				post.CaptchaId,
+			)
+			if !valid {
+				return errors.New("captcha is invalid or has expired")
 			}
 			return nil
 		},
