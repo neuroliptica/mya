@@ -19,6 +19,10 @@ func init() {
 		TimeFormat: time.DateTime,
 	})
 
+	// Debug mode by default.
+	// todo(zvezdochka): explicit debug flag when start.
+	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+
 	// Initialize other services.
 	initialization := Maybe{
 		compileTemplates,
