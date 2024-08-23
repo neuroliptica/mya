@@ -34,11 +34,15 @@ func newCaptcha(c echo.Context) error {
 func getCaptcha(c echo.Context) error {
 	id := c.QueryParam("id")
 	if id == "" {
-		return c.String(http.StatusBadRequest, "no id provided")
+		return c.JSON(http.StatusBadRequest, CaptchaError{
+			Error: "no id provided",
+		})
 	}
 	img, err := captchas.GetImage(id)
 	if err != nil {
-		return c.String(http.StatusBadRequest, err.Error())
+		return c.JSON(http.StatusBadRequest, CaptchaError{
+			Error: err.Error(),
+		})
 	}
 	r := bytes.NewReader(img)
 
