@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -11,20 +12,22 @@ type CaptchaId struct {
 	// Expires time.Time
 }
 
+type CaptchaError struct {
+	Error string `json:"error"`
+}
+
 // GET /api/captcha/new
 func newCaptcha(c echo.Context) error {
 	// todo: generate random value
-	value := "123"
-	id := captchas.Create(value)
-
+	id, err := captchas.Create()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, CaptchaError{
+			Error: err.Error(),
+		})
+	}
 	return c.JSON(http.StatusCreated, CaptchaId{
 		Id: id,
 	})
-}
-
-type CaptchaResponse struct {
-	Id     string `json:"id"`
-	Base64 string `json:"base64_image"`
 }
 
 // GET /api/captcha/get?id={id}
@@ -37,9 +40,7 @@ func getCaptcha(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
 	}
+	r := bytes.NewReader(img)
 
-	return c.JSON(http.StatusFound, CaptchaResponse{
-		Id:     id,
-		Base64: string(img),
-	})
+	return c.Stream(http.StatusFound, "image/png", r)
 }

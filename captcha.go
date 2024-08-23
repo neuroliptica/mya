@@ -1,12 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"sync"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
+
+	cgen "github.com/steambap/captcha"
 )
 
 const (
@@ -75,11 +78,22 @@ func (c *Storage) GetImage(id string) ([]byte, error) {
 }
 
 // Create new captcha record and return it's id.
-func (c *Storage) Create(value string) string {
+func (c *Storage) Create() (string, error) {
+	data, err := cgen.New(150, 50)
+	if err != nil {
+		return "", err
+	}
+	log.Debug().Msgf("captcha => %s", data.Text)
+
+	buf := new(bytes.Buffer)
+	err = data.WriteImage(buf)
+	if err != nil {
+		return "", err
+	}
+
 	v := &captcha{
-		value: value,
-		// todo generate image.
-		image:   []byte("empty"),
+		value:   data.Text,
+		image:   buf.Bytes(),
 		created: time.Now(),
 	}
 	c.Mu.Lock()
@@ -88,7 +102,7 @@ func (c *Storage) Create(value string) string {
 	id := uuid.New().String()
 	c.Map[id] = v
 
-	return id
+	return id, nil
 }
 
 // Delete record from captcha map by id.
