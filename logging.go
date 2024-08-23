@@ -11,7 +11,7 @@ func LoggingMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			"method": c.Request().Method,
 			"url":    c.Request().URL.Path,
 			"query":  c.Request().URL.RawQuery,
-		}).Msg("request")
+		}).Msg(c.RealIP())
 
 		err := next(c)
 		if err != nil {
