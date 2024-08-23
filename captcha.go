@@ -110,14 +110,12 @@ func (c *Storage) Create() (string, error) {
 
 // Delete record from captcha map by id.
 func (c *Storage) Delete(id string) {
-	_, ok := c.Get(id)
-	if !ok {
-		return
-	}
 	c.Mu.Lock()
 	defer c.Mu.Unlock()
-
-	delete(c.Map, id)
+	_, ok := c.Map[id]
+	if ok {
+		delete(c.Map, id)
+	}
 }
 
 // Should be started in separate goroutine when init.
@@ -137,16 +135,15 @@ func (c *Storage) Cleanup() {
 			}
 		}
 		c.Mu.RUnlock()
+
 		if len(r) == 0 {
 			continue
 		}
-
 		log.Info().Msgf("cleanup for %d captcha records.", len(r))
+
 		// Removing expired captchas.
-		c.Mu.Lock()
 		for i := range r {
-			delete(c.Map, r[i])
+			c.Delete(r[i])
 		}
-		c.Mu.Unlock()
 	}
 }
