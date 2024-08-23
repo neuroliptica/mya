@@ -79,7 +79,10 @@ func (c *Storage) GetImage(id string) ([]byte, error) {
 
 // Create new captcha record and return it's id.
 func (c *Storage) Create() (string, error) {
-	data, err := cgen.New(150, 50)
+	//opt := func(c *cgen.Options) {
+	//	c.BackgroundColor = color.White
+	//}
+	data, err := cgen.New(170, 60)
 	if err != nil {
 		return "", err
 	}
