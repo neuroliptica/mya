@@ -30,6 +30,14 @@ type Post struct {
 	CaptchaValue string `json:"-" gorm:"-:all"`
 }
 
+func migratePost() error {
+	return db.AutoMigrate(&Post{})
+}
+
+func checkThread(board string, id uint) (*Post, error) {
+	return checkRecord(&Post{}, "parent = 0 AND board = ? AND id = ?", board, id)
+}
+
 func (t Post) FormatTimestamp() string {
 	return t.CreatedAt.Format("02/01/2006 15:04:05")
 }
@@ -39,12 +47,64 @@ func (t Post) RenderedText() template.HTML {
 	return replaceMarkdown(t.Text)
 }
 
-func migratePost() error {
-	return db.AutoMigrate(&Post{})
+// Check if current poster isn't banned.
+func (p *Post) CheckBanned() error {
+	b, err := checkRecord(&Ban{
+		Hash: p.IpHash,
+	})
+	if err != nil {
+		log.Error().Msg(err.Error())
+		return nil
+	}
+	if b.hasExpired() {
+		return nil
+	}
+	return fmt.Errorf("banned until %v for %s", b.Until, b.Reason)
 }
 
-func checkThread(board string, id uint) (*Post, error) {
-	return checkRecord(&Post{}, "parent = 0 AND board = ? AND id = ?", board, id)
+// Check if post board exists.
+func (p *Post) CheckBoard() error {
+	_, err := checkRecord(&Board{
+		Link: p.Board,
+	})
+	return err
+}
+
+// Check if post thread exists.
+func (p *Post) CheckThread() error {
+	if p.Parent == 0 {
+		return nil
+	}
+	_, err := checkThread(p.Board, p.Parent)
+	return err
+}
+
+// Check if post subject is valid.
+func (p *Post) CheckSubject() error {
+	l := len(p.Subject)
+	if l == 0 && p.Parent == 0 {
+		// todo(zvezdochka): ErrorEmptySubject
+		return errors.New("empty subject for thread")
+	}
+	if l > 80 {
+		p.Subject = p.Subject[:80]
+	}
+	return nil
+}
+
+// Validate post captcha.
+func (p *Post) CheckCaptcha() error {
+	valid := captchas.Check(p.CaptchaValue, p.CaptchaId)
+	captchas.Delete(p.CaptchaId)
+	log.Debug().Msgf(
+		"captcha %s was deleted",
+		p.CaptchaId,
+	)
+	if !valid {
+		// todo(zvezdochka): ErrorInvalidCaptcha
+		return errors.New("captcha is invalid or has expired")
+	}
+	return nil
 }
 
 // Update lastbump field.
@@ -80,61 +140,11 @@ func createPost(c echo.Context) error {
 		post.Name = "Anonymous"
 	}
 	checks := Maybe{
-		// Check if ip not banned.
-		func() error {
-			b, err := checkRecord(&Ban{
-				Hash: post.IpHash,
-			})
-			if err != nil {
-				// We will get non-nil error also if there is no record.
-				log.Debug().Msg(err.Error())
-				return nil
-			}
-			if b.hasExpired() {
-				return nil
-			}
-			return fmt.Errorf("banned until %v for %s", b.Until, b.Reason)
-		},
-		// Check if board exists.
-		func() error {
-			_, err := checkRecord(&Board{
-				Link: post.Board,
-			})
-			return err
-		},
-		// Check if thread exists and not closed (todo).
-		func() error {
-			if post.Parent == 0 {
-				return nil
-			}
-			_, err := checkThread(post.Board, post.Parent)
-			return err
-		},
-		// Check if post subject is valid.
-		func() error {
-			l := len(post.Subject)
-			if l == 0 && post.Parent == 0 {
-				return errors.New("empty subject for thread")
-			}
-			if l > 80 {
-				post.Subject = post.Subject[:80]
-			}
-			return nil
-		},
-		// Check if captcha is valid.
-		func() error {
-			valid := captchas.Check(post.CaptchaValue, post.CaptchaId)
-			// Delete after check to unsure it won't be used.
-			captchas.Delete(post.CaptchaId)
-			log.Debug().Msgf(
-				"captcha %s was deleted",
-				post.CaptchaId,
-			)
-			if !valid {
-				return errors.New("captcha is invalid or has expired")
-			}
-			return nil
-		},
+		post.CheckBanned,
+		post.CheckBoard,
+		post.CheckThread,
+		post.CheckSubject,
+		post.CheckCaptcha,
 	}
 	err = checks.Eval()
 	if err != nil {
