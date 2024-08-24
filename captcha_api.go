@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/rs/zerolog/log"
 )
 
 type CaptchaId struct {
@@ -12,18 +13,12 @@ type CaptchaId struct {
 	// Expires time.Time
 }
 
-type CaptchaError struct {
-	Error string `json:"error"`
-}
-
 // GET /api/captcha/new
 func newCaptcha(c echo.Context) error {
-	// todo: generate random value
 	id, err := captchas.Create()
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, CaptchaError{
-			Error: err.Error(),
-		})
+		log.Error().Msg(err.Error())
+		return c.JSON(http.StatusInternalServerError, ErrorNewCaptcha)
 	}
 	return c.JSON(http.StatusCreated, CaptchaId{
 		Id: id,
@@ -34,15 +29,12 @@ func newCaptcha(c echo.Context) error {
 func getCaptcha(c echo.Context) error {
 	id := c.QueryParam("id")
 	if id == "" {
-		return c.JSON(http.StatusBadRequest, CaptchaError{
-			Error: "no id provided",
-		})
+		return c.JSON(http.StatusBadRequest, ErrorNoCaptchaId)
 	}
 	img, err := captchas.GetImage(id)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, CaptchaError{
-			Error: err.Error(),
-		})
+		log.Debug().Msg(err.Error())
+		return c.JSON(http.StatusBadRequest, ErrorInvalidCaptchaId)
 	}
 	r := bytes.NewReader(img)
 

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/rs/zerolog/log"
 )
 
 // Board model for single board entry.
@@ -26,20 +27,24 @@ func migrateBoard() error {
 func createBoard(c echo.Context) error {
 	board := new(Board)
 	if err := c.Bind(board); err != nil {
-		return c.String(http.StatusBadRequest, "bad request")
+		log.Error().Msg(err.Error())
+		return c.JSON(http.StatusBadRequest, ErrorBadRequest)
 	}
-	if board.Name == "" || board.Link == "" {
-		return c.String(http.StatusBadRequest, "empty name or link")
+	if board.Name == "" {
+		return c.JSON(http.StatusBadRequest, ErrorEmptyName)
 	}
+	if board.Link == "" {
+		return c.JSON(http.StatusBadRequest, ErrorEmptyLink)
+	}
+
 	br := Board{
 		Name: board.Name,
 		Link: board.Link,
 	}
-
 	result := db.Create(&br)
 	if result.Error != nil {
-		// todo: not to expose internal db error.
-		return c.String(http.StatusBadRequest, result.Error.Error())
+		log.Error().Msg(result.Error.Error())
+		return c.JSON(http.StatusBadRequest, ErrorCreateFailed)
 	}
 
 	return c.JSON(http.StatusOK, &br)
@@ -49,8 +54,8 @@ func getBoards(c echo.Context) error {
 	var boards []Board
 	err := get(&boards)
 	if err != nil {
-		// todo: not to expose internal db error.
-		return c.String(http.StatusBadRequest, err.Error())
+		log.Error().Msg(err.Error())
+		return c.JSON(http.StatusBadRequest, ErrorGetFailed)
 	}
 
 	return c.JSON(http.StatusOK, boards)

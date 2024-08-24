@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -83,8 +82,7 @@ func (p *Post) CheckThread() error {
 func (p *Post) CheckSubject() error {
 	l := len(p.Subject)
 	if l == 0 && p.Parent == 0 {
-		// todo(zvezdochka): ErrorEmptySubject
-		return errors.New("empty subject for thread")
+		return ErrorEmptySubject
 	}
 	if l > 80 {
 		p.Subject = p.Subject[:80]
@@ -98,8 +96,7 @@ func (p *Post) CheckName() error {
 		p.Name = "Anonymous"
 	}
 	if len(p.Name) > 80 {
-		// todo(zvezdochka): ErrorNameTooLong
-		return errors.New("name is too long")
+		return ErrorNameTooLong
 	}
 	return nil
 }
@@ -113,8 +110,7 @@ func (p *Post) CheckCaptcha() error {
 		p.CaptchaId,
 	)
 	if !valid {
-		// todo(zvezdochka): ErrorInvalidCaptcha
-		return errors.New("captcha is invalid or has expired")
+		return ErrorInvalidCaptcha
 	}
 	return nil
 }
@@ -157,19 +153,22 @@ func createPost(c echo.Context) error {
 	}
 	err = checks.Eval()
 	if err != nil {
-		return c.String(http.StatusBadRequest, err.Error())
+		return c.JSON(http.StatusBadRequest, Error{err.Error()})
 	}
 
 	result := db.Create(post)
 	if result.Error != nil {
-		return c.String(http.StatusBadRequest, err.Error())
+		e := Error{result.Error.Error()}
+		log.Error().Msg(e.Error())
+		return c.JSON(http.StatusBadRequest, e)
 	}
 
 	// Bump parent thread.
 	if !post.Sage && post.Parent != 0 {
 		err = bump(post.Parent)
 		if err != nil {
-			return c.String(http.StatusInternalServerError, err.Error())
+			log.Error().Msg(err.Error())
+			return c.JSON(http.StatusInternalServerError, ErrorBumpFailed)
 		}
 	}
 
