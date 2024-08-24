@@ -29,35 +29,46 @@ function loadCaptcha() {
     .then((r) => {
       let g = document.getElementById("form-sage");
 
+      // Replace an existing node or create new if not exists.
+      let replace = (id, c) => {
+        let t = document.getElementById(id);
+        if (t !== null) {
+          t.replaceWith(c);
+          return;
+        }
+        g.appendChild(c);
+      };
+
       // Append captcha_id input field to form.
       let c = document.createElement("input");
+      c.setAttribute("id", "captcha_id");
       c.setAttribute("type", "hidden");
       c.setAttribute("name", "captcha_id");
       c.setAttribute("value", r["id"]);
 
-      g.appendChild(c);
+      replace("captcha_id", c);
 
       // Append captcha input field.
       let input = document.createElement("input");
-      
       input.setAttribute("id", "captcha_value");
       input.setAttribute("class", "form-input-raw");
       input.setAttribute("name", "captcha_value");
       input.setAttribute("placeholder", "captcha");
       input.setAttribute("type", "text");
 
-      g.appendChild(input);
+      replace("captcha_value", input);
 
       // Load captcha image and append to form.
       let img = document.createElement("img");
       const src = "http://127.0.0.1:3000/api/captcha/get?id=" + r["id"];
 
+      img.setAttribute("id", "captcha_image");
       img.setAttribute("src", src);
       img.setAttribute("width", "170");
       img.setAttribute("height", "25");
+      img.setAttribute("onclick", "loadCaptcha();")
 
-      g.appendChild(img);
-
+      replace("captcha_image", img);
     })
     .catch((e) => console.log(e));
 }
