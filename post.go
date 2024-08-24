@@ -92,6 +92,18 @@ func (p *Post) CheckSubject() error {
 	return nil
 }
 
+// Check if post name is valid.
+func (p *Post) CheckName() error {
+	if p.Name == "" {
+		p.Name = "Anonymous"
+	}
+	if len(p.Name) > 80 {
+		// todo(zvezdochka): ErrorNameTooLong
+		return errors.New("name is too long")
+	}
+	return nil
+}
+
 // Validate post captcha.
 func (p *Post) CheckCaptcha() error {
 	valid := captchas.Check(p.CaptchaValue, p.CaptchaId)
@@ -135,15 +147,12 @@ func createPost(c echo.Context) error {
 
 	post.IpHash = hash(c.RealIP())
 	post.LastBump = time.Now()
-	// todo(zvezdochka): check len for post.name
-	if post.Name == "" {
-		post.Name = "Anonymous"
-	}
 	checks := Maybe{
 		post.CheckBanned,
 		post.CheckBoard,
 		post.CheckThread,
 		post.CheckSubject,
+		post.CheckName,
 		post.CheckCaptcha,
 	}
 	err = checks.Eval()
