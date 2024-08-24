@@ -124,6 +124,14 @@ func bump(thread uint) error {
 	return result.Error
 }
 
+// Bump parent thread if neither sage nor creating.
+func (p *Post) BumpParent() error {
+	if !p.Sage && p.Parent != 0 {
+		return bump(p.Parent)
+	}
+	return nil
+}
+
 func createPost(c echo.Context) error {
 	post := new(Post)
 	err := echo.FormFieldBinder(c).
@@ -164,13 +172,10 @@ func createPost(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, e)
 	}
 
-	// Bump parent thread.
-	if !post.Sage && post.Parent != 0 {
-		err = bump(post.Parent)
-		if err != nil {
-			log.Error().Msg(err.Error())
-			return c.JSON(http.StatusInternalServerError, ErrorBumpFailed)
-		}
+	err = post.BumpParent()
+	if err != nil {
+		log.Error().Msg(err.Error())
+		return c.JSON(http.StatusInternalServerError, ErrorBumpFailed)
 	}
 
 	return c.JSON(http.StatusCreated, post)
