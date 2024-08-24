@@ -138,7 +138,8 @@ func createPost(c echo.Context) error {
 		BindError()
 
 	if err != nil {
-		return c.String(http.StatusBadRequest, err.Error())
+		log.Error().Msg(err.Error())
+		return c.JSON(http.StatusBadRequest, ErrorBadRequest)
 	}
 
 	post.IpHash = hash(c.RealIP())
