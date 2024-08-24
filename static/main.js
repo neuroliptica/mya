@@ -39,6 +39,14 @@ function loadCaptcha() {
         g.appendChild(c);
       };
 
+      let create = (id, c) => {
+        let t = document.getElementById(id);
+        if (t !== null) {
+          return;
+        }
+        g.appendChild(c);
+      };
+
       // Append captcha_id input field to form.
       let c = document.createElement("input");
       c.setAttribute("id", "captcha_id");
@@ -56,12 +64,11 @@ function loadCaptcha() {
       input.setAttribute("placeholder", "captcha");
       input.setAttribute("type", "text");
 
-      replace("captcha_value", input);
+      create("captcha_value", input);
 
       // Load captcha image and append to form.
       let img = document.createElement("img");
       const src = "http://127.0.0.1:3000/api/captcha/get?id=" + r["id"];
-
       img.setAttribute("id", "captcha_image");
       img.setAttribute("src", src);
       img.setAttribute("width", "170");
