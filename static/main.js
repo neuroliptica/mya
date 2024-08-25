@@ -1,12 +1,17 @@
 
-// === Utils ===
-function changeVisible(id) {
-  let f = document.getElementById(id);
-  f.style.display = (f.style.display === "none" ? "block" : "none");
-}
-
 // === Reply form ===
+var reply = document.getElementById("new-reply");
 var form = document.getElementById("post-form");
+
+reply.addEventListener("click", () => {
+  let f = document.getElementById("reply-form");
+  if (f.style.display === "none") {
+    loadCaptcha();
+    f.style.display = "block";
+    return;
+  }
+  f.style.display = "none";
+})
 
 function genCaptcha() {
   return fetch("http://127.0.0.1:3000/api/captcha/new")
@@ -83,4 +88,3 @@ form.addEventListener("submit", (e) => {
   post();
 })
 
-loadCaptcha();

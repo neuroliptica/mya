@@ -22,7 +22,7 @@
         /{{ .CurrentBoard.Link }}/ - {{ .CurrentBoard.Name }}
       </h1>
       <nav class="board-nav">
-        <a class="button board-nav-item" onclick="changeVisible('reply-form');">New Thread</a>
+        <a class="button board-nav-item" id="new-reply">New Thread</a>
         <a class="button board-nav-item">Catalog</a>
         <div class="board-pagination">
           {{ range .Pages.Pages }}
