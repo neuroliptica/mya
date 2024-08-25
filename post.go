@@ -27,6 +27,9 @@ type Post struct {
 
 	CaptchaId    string `json:"-" gorm:"-:all"`
 	CaptchaValue string `json:"-" gorm:"-:all"`
+
+	FilesJson string `json:"-"`
+	Files     []File `gorm:"-:all"`
 }
 
 func migratePost() error {
