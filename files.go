@@ -62,51 +62,64 @@ var signatures = map[string]func([]byte) bool{
 	"jpeg": jpeg,
 	"png":  png,
 	"webm": webm,
+	"mp4":  mp4,
+}
+
+type FSign struct {
+	// Leading bytes offset.
+	Offset int
+	// Leading signature.
+	Leading []byte
+	// Trailing signature.
+	Trailing []byte
+}
+
+func (s FSign) CheckSign(f []byte) bool {
+	if len(f) < s.Offset+len(s.Trailing)+len(s.Trailing) {
+		return false
+	}
+	p := true
+	for i := range s.Leading {
+		p = p && (f[i+s.Offset] == s.Leading[i])
+	}
+	for i := range s.Trailing {
+		p = p && (f[len(f)-i-1] == s.Trailing[len(s.Trailing)-i-1])
+	}
+	return p
 }
 
 func jpeg(f []byte) bool {
-	if len(f) < 4 {
-		return false
-	}
-	// 2-byte jpg leading sign.
-	fb := (f[0] == 0xff && f[1] == 0xd8)
-	// 2-byte jpg trailing sign.
-	lb := (f[len(f)-2] == 0xff && f[len(f)-1] == 0xd9)
-	return fb && lb
+	return FSign{
+		Leading:  []byte{0xff, 0xd8},
+		Trailing: []byte{0xff, 0xd9},
+	}.CheckSign(f)
 }
 
 func png(f []byte) bool {
-	// 8-byte png leading sign.
-	sign := []byte{
-		0x89,
-		0x50, 0x4e, 0x47,
-		0x0d, 0x0a,
-		0x1a,
-		0x0a,
-	}
-	if len(f) < len(sign) {
-		return false
-	}
-	p := true
-	for i := range sign {
-		p = p && (sign[i] == f[i])
-	}
-	return p
+	return FSign{
+		Leading: []byte{
+			0x89, 0x50, 0x4e, 0x47,
+			0x0d, 0x0a, 0x1a, 0x0a,
+		},
+	}.CheckSign(f)
+}
+
+func mp4(f []byte) bool {
+	return FSign{
+		Offset: 4,
+		Leading: []byte{
+			0x66, 0x74, 0x79, 0x70,
+			0x69, 0x73, 0x6f, 0x6d,
+		},
+	}.CheckSign(f)
 }
 
 func webm(f []byte) bool {
-	offset := 4
-	sign := []byte{
-		0x66, 0x74, 0x79, 0x70, 0x4D, 0x53, 0x4E, 0x56,
-	}
-	if len(f) < offset+len(sign) {
-		return false
-	}
-	p := true
-	for i := range sign {
-		p = p && (f[offset+i] == sign[i])
-	}
-	return p
+	return FSign{
+		Leading: []byte{
+			0x1A, 0x45, 0xDF, 0xA3,
+		},
+	}.CheckSign(f)
 }
 
 func uploadFile(header *multipart.FileHeader) (*File, error) {
