@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -13,8 +14,8 @@ import (
 )
 
 const (
-	CaptchaTimeLimit = 15 * time.Second
-	CleanupTimeout   = 30 * time.Second
+	CaptchaTimeLimit = 10 * time.Second
+	CleanupTimeout   = 10 * time.Second
 )
 
 var (
@@ -120,10 +121,11 @@ func (c *Storage) Delete(id string) {
 
 // Should be started in separate goroutine when init.
 func (c *Storage) Cleanup() {
-	log.Info().Msgf(
-		"captcha cleanup daemon initialized with timeout %v.",
-		CleanupTimeout,
-	)
+	log.Info().Fields(map[string]interface{}{
+		"cleanup-timeout": fmt.Sprintf("%v", CleanupTimeout),
+		"captcha-timeout": fmt.Sprintf("%v", CaptchaTimeLimit),
+	}).Msg("captcha")
+
 	for {
 		time.Sleep(CleanupTimeout)
 
@@ -139,7 +141,9 @@ func (c *Storage) Cleanup() {
 		if len(r) == 0 {
 			continue
 		}
-		log.Info().Msgf("cleanup for %d captcha records.", len(r))
+		log.Info().Fields(map[string]interface{}{
+			"cleanup": len(r),
+		}).Msg("captcha")
 
 		// Removing expired captchas.
 		for i := range r {
