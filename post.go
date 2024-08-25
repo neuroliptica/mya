@@ -181,6 +181,21 @@ func createPost(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, ErrorBumpFailed)
 	}
 
+	// process files
+	form, err := c.MultipartForm()
+	if err != nil {
+		log.Error().Msg(err.Error())
+		return c.JSON(http.StatusInternalServerError, Error{err.Error()})
+	}
+	files := form.File["files"]
+	for _, file := range files {
+		_, err := uploadFile(file)
+		if err != nil {
+			log.Error().Msg(err.Error())
+			return c.JSON(http.StatusInternalServerError, Error{err.Error()})
+		}
+	}
+
 	return c.JSON(http.StatusCreated, post)
 }
 

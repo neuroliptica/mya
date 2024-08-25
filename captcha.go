@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	CaptchaTimeLimit = 10 * time.Second
-	CleanupTimeout   = 10 * time.Second
+	CaptchaTimeLimit = 30 * time.Second
+	CleanupTimeout   = 30 * time.Second
 )
 
 var (
