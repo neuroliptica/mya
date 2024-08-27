@@ -6,16 +6,7 @@
   <title>/{{ .CurrentBoard.Link }}/ - {{ .CurrentBoard.Name }}</title>
 </head>
 <body>
-  <header class="header">
-    <a class="header-item header-board" href="/" title="Main page">main_page</a>
-    {{ range .Header }}
-    <a class="header-item header-board" href="/{{ .Link }}" title="{{ .Name }}">{{ .Name }}</a>
-    {{ end }}
-    <div class="header-spacer"></div>
-    <a class="header-item header-board" href="/">info</a>
-    <a class="header-item header-board" href="/">settings</a>
-    <a class="header-item header-board" href="/">mod_log</a>
-  </header>
+  {{ template "header.tmpl" . }}
   <main class="main">
     <section id="threads" class="board">
       <h1 class="page-title">
@@ -24,40 +15,9 @@
       <nav class="board-nav">
         <a class="button board-nav-item" id="new-reply">New Thread</a>
         <a class="button board-nav-item">Catalog</a>
-        <div class="board-pagination">
-          {{ range .Pages.Pages }}
-            {{ if eq $.Pages.Current . }}
-              <span class="board-pagination-page board-pagination-page-current">{{.}}</span>
-            {{ else }}
-              <a class="button board-pagination-page" href="?page={{.}}">{{.}}</a>
-            {{ end }}
-          {{ end }}
-        </div>
+        {{ template "paging.tmpl" .Pages }}
       </nav>
-      <div class="reply-form" id="reply-form" style="display: none;">
-        <form id="post-form">
-          <input type="hidden" name="board" value="{{ .CurrentBoard.Link }}">
-          <input type="hidden" name="parent" value="0">
-          <div class="form-raw">
-            <input class="form-input-raw" type="text" id="subject" name="subject" placeholder="subject">
-            <input class="form-input-raw" type="text" id="name" name="name" placeholder="name">
-            <input id="submit" type="submit" name="submit" value="post" class="form-button">
-          </div>
-          <div class="form-raw">
-            <textarea class="form-input-raw form-postarea" placeholder="max symbols: 2000" name="text"></textarea>
-          </div>
-          <div class="form-raw" id="form-sage">
-            <div class="form-sage">
-              <input id="sage" type="checkbox" name="sage" value="true">
-              <span title="don't bump this thread">sage</span>
-            </div>
-            <input type="text" id="captcha_value" class="form-input-raw" name="captcha_value" placeholder="captcha">
-          </div>
-          <div class="form-raw">
-            <input class="form-input-raw" type="file" name="files" multiple>
-          </div>
-        </form> 
-      </div>
+      {{ template "form.tmpl" . }}
       <hr class="separator">
       <section id="index-thread-container" class="thread-container">
       {{ range $index, $op := .Threads }}
@@ -105,15 +65,7 @@
       <hr class="separator">
       <nav class="board-nav">
         <a class="button board-nav-item">Catalog</a>
-        <div class="board-pagination">
-          {{ range .Pages.Pages }}
-            {{ if eq $.Pages.Current . }}
-              <span class="board-pagination-page board-pagination-page-current">{{.}}</span>
-            {{ else }}
-              <a class="button board-pagination-page" href="?page={{.}}">{{.}}</a>
-            {{ end }}
-          {{ end }}
-        </div>
+        {{ template "paging.tmpl" .Pages }}
       </nav>
     </section>
   </main>

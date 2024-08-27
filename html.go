@@ -20,6 +20,11 @@ type BoardsInfo struct {
 	CurrentBoard Board
 }
 
+// Embed in every view with form.
+type FormInfo struct {
+	FormReply int
+}
+
 func serveMain(c echo.Context) error {
 	view := new(strings.Builder)
 	var boards []Board
@@ -30,8 +35,9 @@ func serveMain(c echo.Context) error {
 			return get(&boards)
 		},
 		func() error {
-			return templates[MainTemplate].
-				Execute(view, MainView{Header: boards})
+			return templates.ExecuteTemplate(view, "main_page.tmpl", MainView{
+				Header: boards,
+			})
 		},
 	}
 	err := serve.Eval()
@@ -49,6 +55,7 @@ type Paging struct {
 
 type BoardView struct {
 	BoardsInfo
+	FormInfo
 	Threads []ThreadView
 
 	Pages Paging
@@ -172,7 +179,7 @@ func serveBoard(c echo.Context) error {
 
 	// Render board page.
 	view := new(strings.Builder)
-	err = templates[BoardTemplate].Execute(view, bv)
+	err = templates.ExecuteTemplate(view, "board.tmpl", bv)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
@@ -182,6 +189,7 @@ func serveBoard(c echo.Context) error {
 
 type ThreadView struct {
 	BoardsInfo
+	FormInfo
 
 	OP      Post
 	Replies []Post
@@ -221,6 +229,9 @@ func serveThread(c echo.Context) error {
 		BoardsInfo: BoardsInfo{
 			CurrentBoard: *board,
 		},
+		FormInfo: FormInfo{
+			FormReply: int(op.ID),
+		},
 		OP: *op,
 	}
 
@@ -239,7 +250,7 @@ func serveThread(c echo.Context) error {
 	}
 
 	view := new(strings.Builder)
-	err = templates[ThreadTemplate].Execute(view, tv)
+	err = templates.ExecuteTemplate(view, "thread.tmpl", tv)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
