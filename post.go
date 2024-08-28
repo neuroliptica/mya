@@ -176,6 +176,12 @@ func (p *Post) Create(ctx echo.Context) error {
 		if err := p.BumpParent(tx); err != nil {
 			return err
 		}
+		// todo(zvezdochka):
+		// manage files as kind of `transaction` also.
+		// eg. if there is fail to create record in db,
+		// then files should be removed from disk.
+		// also: maybe use some /temp place?
+
 		// Upload files on disk.
 		fs, err := processFiles(ctx)
 		if err != nil {
