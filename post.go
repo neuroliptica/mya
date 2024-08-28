@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -119,6 +120,40 @@ func (p *Post) CheckCaptcha() error {
 	return nil
 }
 
+// Get files assigned with post.
+func (p *Post) GetFiles(tx *gorm.DB) ([]File, error) {
+	var fs FilesJson
+	if err := json.Unmarshal([]byte(p.FilesJson), &fs); err != nil {
+		return nil, err
+	}
+	if len(fs.Ids) == 0 {
+		log.Debug().Msgf("(post.FilesJson)=%s", p.FilesJson)
+		return nil, nil
+	}
+
+	var files []File
+	res := tx.Find(&files, fs.Ids)
+
+	return files, res.Error
+}
+
+// Assign files by it's ids with post.
+func (p *Post) SetFiles(tx *gorm.DB, fs []File) error {
+	ids := FilesJson{make([]int, 0)}
+	for i := range fs {
+		ids.Ids = append(ids.Ids, int(fs[i].ID))
+	}
+	m, err := json.Marshal(ids)
+	if err != nil {
+		return err
+	}
+	res := tx.Model(p).Updates(Post{
+		FilesJson: string(m),
+	})
+
+	return res.Error
+}
+
 // Bump parent thread if neither sage nor creating.
 func (p *Post) BumpParent(tx *gorm.DB) error {
 	if p.Sage || p.Parent == 0 {
@@ -141,8 +176,19 @@ func (p *Post) Create(ctx echo.Context) error {
 		if err := p.BumpParent(tx); err != nil {
 			return err
 		}
-		// Process files.
-		return nil
+		// Upload files on disk.
+		fs, err := processFiles(ctx)
+		if err != nil {
+			return err
+		}
+		// Create files records in db.
+		for i := range fs {
+			if err := tx.Create(&fs[i]).Error; err != nil {
+				return err
+			}
+		}
+		// Assosiate files with current post.
+		return p.SetFiles(tx, fs)
 	})
 }
 
@@ -188,24 +234,5 @@ func createPost(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, jsonerr)
 	}
 
-	// process files
-	form, err := c.MultipartForm()
-	if err != nil {
-		log.Error().Msg(err.Error())
-		return c.JSON(http.StatusInternalServerError, Error{err.Error()})
-	}
-	files := form.File["files"]
-	for _, file := range files {
-		_, err := uploadFile(file)
-		if err != nil {
-			log.Error().Msg(err.Error())
-			return c.JSON(http.StatusInternalServerError, Error{err.Error()})
-		}
-	}
-
 	return c.JSON(http.StatusCreated, post)
-}
-
-func deletePost(c echo.Context) error {
-	return nil
 }

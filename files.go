@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 )
 
 const (
@@ -33,12 +34,32 @@ type File struct {
 	UpdatedAt time.Time `json:"-"`
 }
 
-type FileJson struct {
-	Ids []string `json:"ids"`
+// Files assosiated with post are encoded as json string.
+// So we can store multiple files for single post record.
+type FilesJson struct {
+	Ids []int `json:"ids"`
 }
 
 func migrateFile() error {
 	return db.AutoMigrate(&File{})
+}
+
+// Read files content from form, then save it on disk.
+func processFiles(ctx echo.Context) ([]File, error) {
+	form, err := ctx.MultipartForm()
+	if err != nil {
+		return nil, err
+	}
+	res := make([]File, 0)
+	fs := form.File["files"]
+	for i := range fs {
+		f, err := uploadFile(fs[i])
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, *f)
+	}
+	return res, nil
 }
 
 func genName(fname string) string {
@@ -122,6 +143,7 @@ func webm(f []byte) bool {
 	}.CheckSign(f)
 }
 
+// Save flie to `src` dir if it is fits conditions.
 func uploadFile(header *multipart.FileHeader) (*File, error) {
 	// todo(zvezdochka): redeclare maxsize const in config.
 	if header.Size > maxsize {
