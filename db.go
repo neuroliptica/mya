@@ -27,6 +27,7 @@ func migrate() error {
 		migrateBoard,
 		migratePost,
 		migrateBan,
+		migrateFile,
 	}
 	return migrations.Eval()
 }
