@@ -8,6 +8,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
+	"gorm.io/gorm"
 )
 
 type Post struct {
@@ -118,21 +119,31 @@ func (p *Post) CheckCaptcha() error {
 	return nil
 }
 
-// Update lastbump field.
-func bump(thread uint) error {
-	result := db.Model(&Post{}).
-		Where("id = ?", thread).
+// Bump parent thread if neither sage nor creating.
+func (p *Post) BumpParent(tx *gorm.DB) error {
+	if p.Sage || p.Parent == 0 {
+		return nil
+	}
+	res := tx.Model(&Post{}).
+		Where("id = ?", p.Parent).
 		Update("last_bump", time.Now())
 
-	return result.Error
+	return res.Error
 }
 
-// Bump parent thread if neither sage nor creating.
-func (p *Post) BumpParent() error {
-	if !p.Sage && p.Parent != 0 {
-		return bump(p.Parent)
-	}
-	return nil
+// Create post record using database transation.
+func (p *Post) Create(ctx echo.Context) error {
+	return db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(p).Error; err != nil {
+			return err
+		}
+		// Bump parent thread optionally.
+		if err := p.BumpParent(tx); err != nil {
+			return err
+		}
+		// Process files.
+		return nil
+	})
 }
 
 func createPost(c echo.Context) error {
@@ -163,22 +174,18 @@ func createPost(c echo.Context) error {
 		post.CheckName,
 		post.CheckCaptcha,
 	}
-	err = checks.Eval()
-	if err != nil {
+
+	if err := checks.Eval(); err != nil {
+		log.Debug().Msg(err.Error())
 		return c.JSON(http.StatusBadRequest, Error{err.Error()})
 	}
 
-	result := db.Create(post)
-	if result.Error != nil {
-		e := Error{result.Error.Error()}
-		log.Error().Msg(e.Error())
-		return c.JSON(http.StatusBadRequest, e)
-	}
-
-	err = post.BumpParent()
-	if err != nil {
+	if err := post.Create(c); err != nil {
 		log.Error().Msg(err.Error())
-		return c.JSON(http.StatusInternalServerError, ErrorBumpFailed)
+		jsonerr := Error{
+			E: fmt.Sprintf("transaction failed: %v", err),
+		}
+		return c.JSON(http.StatusInternalServerError, jsonerr)
 	}
 
 	// process files
