@@ -158,7 +158,7 @@ func (f *File) SetSignature(buf []byte) error {
 func (f *File) Save(buf io.Reader) error {
 	dst, err := os.Create(f.Path)
 	if err != nil {
-		return nil
+		return err
 	}
 	defer dst.Close()
 
