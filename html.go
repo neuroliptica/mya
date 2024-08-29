@@ -36,13 +36,16 @@ func serveMain(c echo.Context) error {
 	view := new(strings.Builder)
 	mv := MainView{}
 
-	if err := mv.RequestBoards(db); err != nil {
-		log.Error().Msg(err.Error())
-		return c.String(http.StatusInternalServerError, err.Error())
+	init := Maybe{
+		func() error {
+			return mv.RequestBoards(db)
+		},
+		func() error {
+			return templates.ExecuteTemplate(view, "main_page.tmpl", mv)
+		},
 	}
 
-	err := templates.ExecuteTemplate(view, "main_page.tmpl", mv)
-	if err != nil {
+	if err := init.Eval(); err != nil {
 		log.Error().Msg(err.Error())
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
