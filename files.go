@@ -2,7 +2,7 @@ package main
 
 import (
 	"bytes"
-	"errors"
+	"fmt"
 	"io"
 	"mime/multipart"
 	"os"
@@ -14,28 +14,35 @@ import (
 )
 
 const (
-	fdir    = "src"
-	maxsize = 2e7
+	FileDirectory = "src"
+	FileMaxSize   = 2e7
+
+	UndefinedSign = ""
 )
+
+// Files assosiated with post are encoded as json string.
+// So we can store multiple files for single post record.
+type FilesJson struct {
+	Ids []int `json:"ids"`
+}
 
 type File struct {
 	ID uint `json:"id"`
 
+	// Relative path for file itself.
 	Path string `json:"path" gorm:"unique"`
+	// Relative path for it's jpeg thumbnail.
+	Thumb string `json:"thumb" gorm:"unique"`
+
 	Name string `json:"name"`
 	Size int64  `json:"size"`
+	Sign string `json:"sign"`
 
 	Width  uint `json:"width"`
 	Height uint `json:"height"`
 
 	CreatedAt time.Time `json:"-"`
 	UpdatedAt time.Time `json:"-"`
-}
-
-// Files assosiated with post are encoded as json string.
-// So we can store multiple files for single post record.
-type FilesJson struct {
-	Ids []int `json:"ids"`
 }
 
 func migrateFile() error {
@@ -136,11 +143,34 @@ func webm(f []byte) bool {
 	}.CheckSign(f)
 }
 
+// Set up File.Sign field or return error if it doesn't avaiable.
+func (f *File) SetSignature(buf []byte) error {
+	for key, sign := range signatures {
+		if sign(buf) {
+			f.Sign = key
+			return nil
+		}
+	}
+	return ErrorInvalidSignature
+}
+
+// Save file itself on disk.
+func (f *File) Save(buf io.Reader) error {
+	dst, err := os.Create(f.Path)
+	if err != nil {
+		return nil
+	}
+	defer dst.Close()
+
+	_, err = io.Copy(dst, buf)
+	return err
+}
+
 // Save flie to `src` dir if it is fits conditions.
 func uploadFile(header *multipart.FileHeader) (*File, error) {
 	// todo(zvezdochka): redeclare maxsize const in config.
-	if header.Size > maxsize {
-		return nil, errors.New("file is too large")
+	if header.Size > FileMaxSize {
+		return nil, ErrorTooLarge
 	}
 	src, err := header.Open()
 	if err != nil {
@@ -153,31 +183,23 @@ func uploadFile(header *multipart.FileHeader) (*File, error) {
 		return nil, err
 	}
 
-	valid := false
-	for _, sign := range signatures {
-		if sign(buf.Bytes()) {
-			valid = true
-			break
-		}
-	}
-	if !valid {
-		return nil, errors.New("invalid file signature")
-	}
-	e := &File{
-		Path: fdir + "/" + genName(header.Filename),
+	f := &File{
+		Path: fmt.Sprintf(
+			"%s/%s",
+			FileDirectory,
+			genName(header.Filename),
+		),
 		Name: header.Filename,
 		Size: header.Size,
 	}
 
-	dst, err := os.Create(e.Path)
-	if err != nil {
-		return nil, err
-	}
-	defer dst.Close()
-
-	if _, err = io.Copy(dst, buf); err != nil {
+	if err := f.SetSignature(buf.Bytes()); err != nil {
 		return nil, err
 	}
 
-	return e, nil
+	if err := f.Save(buf); err != nil {
+		return nil, err
+	}
+
+	return f, nil
 }

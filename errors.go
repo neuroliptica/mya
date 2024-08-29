@@ -36,5 +36,9 @@ var (
 	ErrorNameTooLong    = Error{"name is too long"}
 	ErrorInvalidCaptcha = Error{"captcha is invalid or has expired"}
 
+	// Files uploading errors.
+	ErrorTooLarge         = Error{"file is too large"}
+	ErrorInvalidSignature = Error{"unknown file's signature"}
+
 	// todo(zvezdochka): HTML pages errors.
 )
