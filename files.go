@@ -7,7 +7,6 @@ import (
 	"mime/multipart"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -27,7 +26,7 @@ type FilesJson struct {
 }
 
 type File struct {
-	ID uint `json:"id"`
+	DataModel
 
 	// Relative path for file itself.
 	Path string `json:"path" gorm:"unique"`
@@ -40,9 +39,6 @@ type File struct {
 
 	Width  uint `json:"width"`
 	Height uint `json:"height"`
-
-	CreatedAt time.Time `json:"-"`
-	UpdatedAt time.Time `json:"-"`
 }
 
 func migrateFile() error {

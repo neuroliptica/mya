@@ -9,15 +9,12 @@ import (
 )
 
 type Ban struct {
-	ID uint
+	DataModel
 
 	// Ip hash, not ip itself.
 	Hash   string `gorm:"unique"`
 	Reason string
 	Until  time.Time
-
-	CreatedAt time.Time
-	UpdatedAt time.Time
 }
 
 func migrateBan() error {

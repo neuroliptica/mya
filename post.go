@@ -13,7 +13,7 @@ import (
 )
 
 type Post struct {
-	ID uint `json:"id"`
+	DataModel
 
 	Name    string `json:"name"`
 	Subject string `json:"subject"`
@@ -22,10 +22,8 @@ type Post struct {
 	Board   string `json:"board"`
 	Parent  uint   `json:"parent"`
 
-	LastBump  time.Time `json:"last_bump"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"-"`
-	IpHash    string    `json:"-"`
+	LastBump time.Time `json:"last_bump"`
+	IpHash   string    `json:"-"`
 
 	CaptchaId    string `json:"-" gorm:"-:all"`
 	CaptchaValue string `json:"-" gorm:"-:all"`

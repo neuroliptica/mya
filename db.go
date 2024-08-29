@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"time"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -10,6 +11,12 @@ import (
 var (
 	db *gorm.DB
 )
+
+type DataModel struct {
+	ID        uint      `json:"id"`
+	CreatedAt time.Time `json:"-"`
+	UpdatedAt time.Time `json:"-"`
+}
 
 func assignSqlite(name string) error {
 	var err error

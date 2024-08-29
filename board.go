@@ -2,7 +2,6 @@ package main
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
@@ -10,13 +9,10 @@ import (
 
 // Board model for single board entry.
 type Board struct {
-	ID uint `json:"id"`
+	DataModel
 
 	Name string `gorm:"unique" json:"name"`
 	Link string `gorm:"unique" json:"link"`
-
-	CreatedAt time.Time `json:"-"`
-	UpdatedAt time.Time `json:"-"`
 }
 
 func migrateBoard() error {
