@@ -15,9 +15,7 @@ func assignSqlite(name string) error {
 	var err error
 	db, err = gorm.Open(
 		sqlite.Open(name),
-		&gorm.Config{
-			//Logger: logger.Default.LogMode(logger.Silent),
-		},
+		&gorm.Config{},
 	)
 	return err
 }

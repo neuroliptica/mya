@@ -4,6 +4,8 @@ import (
 	"crypto/md5"
 	"fmt"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type Ban struct {
@@ -28,27 +30,30 @@ func hash(ip string) string {
 	return fmt.Sprintf("%x", md5.Sum([]byte(ip)))
 }
 
-func (b *Ban) hasExpired() bool {
+func (b *Ban) HasExpired() bool {
 	return time.Now().After(b.Until)
 }
 
 func ban(ip string, reason string, until time.Time) error {
 	// todo(zvezdochka): rewrite using REPLACE sql query.
 	h := hash(ip)
-	b, err := checkRecord(&Ban{}, "hash = ?", h)
-	if err != nil {
-		r := db.Create(&Ban{
+	var b Ban
+	err := db.Where("hash = ?", h).First(&b).Error
+	switch err {
+	case nil:
+		break
+	case gorm.ErrRecordNotFound:
+		return db.Create(&Ban{
 			Hash:   h,
 			Until:  until,
 			Reason: reason,
-		})
-		return r.Error
+		}).Error
+	default:
+		return err
 	}
-	// updates non zero fields in struct.
-	r := db.Model(b).Updates(Ban{
+
+	return db.Model(b).Updates(Ban{
 		Until:  until,
 		Reason: reason,
-	})
-
-	return r.Error
+	}).Error
 }

@@ -53,17 +53,26 @@ func (t Post) RenderedText() template.HTML {
 
 // Check if current poster isn't banned.
 func (p *Post) CheckBanned() error {
-	b, err := checkRecord(&Ban{
-		Hash: p.IpHash,
-	})
-	if err != nil {
-		log.Error().Msg(err.Error())
+	var b Ban
+	err := db.Where(&Ban{Hash: p.IpHash}).
+		First(&b).
+		Error
+	switch err {
+	case nil:
+		break
+	case gorm.ErrRecordNotFound:
+		return nil
+	default:
+		return err
+	}
+	if b.HasExpired() {
 		return nil
 	}
-	if b.hasExpired() {
-		return nil
-	}
-	return fmt.Errorf("banned until %v for %s", b.Until, b.Reason)
+	return fmt.Errorf(
+		"banned until %v for %s",
+		b.Until,
+		b.Reason,
+	)
 }
 
 // Check if post board exists.
@@ -127,7 +136,7 @@ func (p *Post) GetFiles(tx *gorm.DB) ([]File, error) {
 		return nil, err
 	}
 	if len(fs.Ids) == 0 {
-		log.Debug().Msgf("(post.FilesJson)=%s", p.FilesJson)
+		log.Debug().Msgf("(*Post).FilesJson=%s", p.FilesJson)
 		return nil, nil
 	}
 
