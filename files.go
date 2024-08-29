@@ -2,9 +2,7 @@ package main
 
 import (
 	"bytes"
-	"crypto/md5"
 	"errors"
-	"fmt"
 	"io"
 	"mime/multipart"
 	"os"
@@ -69,12 +67,7 @@ func genName(fname string) string {
 	if len(p) != 0 {
 		ext = "." + p[len(p)-1]
 	}
-	fid := uuid.NewString()
-	return fmt.Sprintf(
-		"%x%s",
-		md5.Sum([]byte(fid)),
-		ext,
-	)
+	return hash(uuid.NewString()) + ext
 }
 
 // Predict file's format by it's header sign.
