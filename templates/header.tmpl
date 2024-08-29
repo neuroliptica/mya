@@ -1,6 +1,6 @@
 <header class="header">
   <a class="header-item header-board" href="/" title="Main page">main_page</a>
-  {{ range .Header }}
+  {{ range .Navbar }}
   <a class="header-item header-board" href="/{{ .Link }}" title="{{ .Name }}">{{ .Name }}</a>
   {{ end }}
   <div class="header-spacer"></div>

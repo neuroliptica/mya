@@ -8,16 +8,19 @@ import (
 	"strings"
 
 	"github.com/labstack/echo/v4"
+	"github.com/rs/zerolog/log"
+	"gorm.io/gorm"
 )
 
-type MainView struct {
-	Header []Board
+// Top sticked navbar.
+type NavbarInfo struct {
+	Navbar       []Board
+	CurrentBoard Board
 }
 
-// Top sticked navbar.
-type BoardsInfo struct {
-	Header       []Board
-	CurrentBoard Board
+// Get all avaible boards from db.
+func (nav *NavbarInfo) RequestBoards(tx *gorm.DB) error {
+	return tx.Find(&nav.Navbar).Error
 }
 
 // Embed in every view with form.
@@ -25,23 +28,22 @@ type FormInfo struct {
 	FormReply int
 }
 
+type MainView struct {
+	NavbarInfo
+}
+
 func serveMain(c echo.Context) error {
 	view := new(strings.Builder)
-	var boards []Board
-	serve := Maybe{
-		func() error {
-			// get boards for header.
-			// todo: cache to avoid requests to db.
-			return get(&boards)
-		},
-		func() error {
-			return templates.ExecuteTemplate(view, "main_page.tmpl", MainView{
-				Header: boards,
-			})
-		},
+	mv := MainView{}
+
+	if err := mv.RequestBoards(db); err != nil {
+		log.Error().Msg(err.Error())
+		return c.String(http.StatusInternalServerError, err.Error())
 	}
-	err := serve.Eval()
+
+	err := templates.ExecuteTemplate(view, "main_page.tmpl", mv)
 	if err != nil {
+		log.Error().Msg(err.Error())
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
@@ -54,7 +56,7 @@ type Paging struct {
 }
 
 type BoardView struct {
-	BoardsInfo
+	NavbarInfo
 	FormInfo
 	Threads []ThreadView
 
@@ -121,8 +123,8 @@ func serveBoard(c echo.Context) error {
 	posts = posts[lb:rb]
 
 	bv := BoardView{
-		BoardsInfo: BoardsInfo{
-			Header:       boards,
+		NavbarInfo: NavbarInfo{
+			Navbar:       boards,
 			CurrentBoard: *board,
 		},
 		Pages: Paging{
@@ -188,7 +190,7 @@ func serveBoard(c echo.Context) error {
 }
 
 type ThreadView struct {
-	BoardsInfo
+	NavbarInfo
 	FormInfo
 
 	OP      Post
@@ -226,7 +228,7 @@ func serveThread(c echo.Context) error {
 	}
 
 	tv := ThreadView{
-		BoardsInfo: BoardsInfo{
+		NavbarInfo: NavbarInfo{
 			CurrentBoard: *board,
 		},
 		FormInfo: FormInfo{
@@ -237,7 +239,7 @@ func serveThread(c echo.Context) error {
 
 	requests := Maybe{
 		func() (err error) {
-			return get(&tv.Header)
+			return tv.RequestBoards(db)
 		},
 		func() (err error) {
 			return get(&tv.Replies, "board = ? AND parent = ?", b, op.ID)
