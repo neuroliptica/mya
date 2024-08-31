@@ -76,18 +76,17 @@ func genName(fname string) string {
 
 // https://www.garykessler.net/library/file_sigs.html
 var signatures = map[string]func([]byte) bool{
-	"jpeg": jpeg,
-	"png":  png,
-	"webm": webm,
-	"mp4":  mp4,
+	"image/jpeg": jpeg,
+	"image/png":  png,
+	"video/webm": webm,
+	"video/mp4":  mp4,
 }
 
 type FSign struct {
 	// Leading bytes offset.
 	Offset int
-	// Leading signature.
-	Leading []byte
-	// Trailing signature.
+
+	Leading  []byte
 	Trailing []byte
 }
 
@@ -149,7 +148,9 @@ func (f *File) SetSignature(buf []byte) error {
 	return ErrorInvalidSignature
 }
 
+// Saving thumbnails as pngs in it's own directory.
 func (f *File) SaveThumb(dst *os.File) error {
+	// todo(zvezdochka): check about fs descriptors limits.
 	f.Thumb = fmt.Sprintf("%s/thumb_%s", ThumbDirectory, f.Name)
 	fs, err := os.Create(f.Thumb)
 	if err != nil {
@@ -168,6 +169,7 @@ func (f *File) SaveThumb(dst *os.File) error {
 	return pnglib.Encode(fs, th)
 }
 
+// Save file and it's thumbnail on disk.
 func (f *File) Save(buf io.Reader) error {
 	dst, err := os.Create(f.Path)
 	if err != nil {
