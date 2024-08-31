@@ -12,6 +12,8 @@ import (
 	"gorm.io/gorm"
 )
 
+const BoardViewReplies = 3
+
 // Top sticked navbar.
 type NavbarInfo struct {
 	Navbar       []Board
@@ -27,6 +29,13 @@ func (nav *NavbarInfo) SetCurrentBoard(tx *gorm.DB, link string) error {
 	return tx.Where(&Board{Link: link}).
 		First(&nav.CurrentBoard).
 		Error
+}
+
+func (nav *NavbarInfo) SetHeader(link string) error {
+	if err := nav.SetCurrentBoard(db, link); err != nil {
+		return err
+	}
+	return nav.SetNavbar(db)
 }
 
 // Embed in every view with form.
@@ -72,33 +81,25 @@ type BoardView struct {
 	Pages   Paging
 }
 
-func (b *BoardView) SetHeader(link string) error {
-	if err := b.SetCurrentBoard(db, link); err != nil {
-		return err
-	}
-
-	return b.SetNavbar(db)
-}
-
 func (b BoardView) LastId() int {
 	return len(b.Threads) - 1
 }
 
 func serveBoard(c echo.Context) error {
-	b := c.Param("board")
+	board := c.Param("board")
 	page, err := strconv.Atoi(c.QueryParam("page"))
 	if err != nil || page < 0 {
 		page = 0
 	}
 
 	bv := BoardView{}
-	if err := bv.SetHeader(b); err != nil {
+	if err := bv.SetHeader(board); err != nil {
 		log.Error().Msg(err.Error())
 		return c.JSON(http.StatusBadRequest, Error{err.Error()})
 	}
 
 	posts := []Post{}
-	if err := db.Find(&posts, "board = ? AND parent = 0", b).Error; err != nil {
+	if err := db.Find(&posts, "board = ? AND parent = 0", board).Error; err != nil {
 		log.Error().Msg(err.Error())
 		return c.JSON(http.StatusBadRequest, Error{err.Error()})
 	}
@@ -166,6 +167,7 @@ type ThreadView struct {
 	Omitted int64
 }
 
+// OP field should be set when called.
 func (t *ThreadView) BoardEntry() error {
 	// Get last 3 replies.
 	err := db.Where(&Post{
@@ -173,7 +175,7 @@ func (t *ThreadView) BoardEntry() error {
 		Parent: t.OP.ID,
 	}).
 		Order("id desc").
-		Limit(4).
+		Limit(BoardViewReplies).
 		Find(&t.Replies).
 		Error
 
@@ -193,63 +195,41 @@ func (t *ThreadView) BoardEntry() error {
 		Error
 }
 
+func (t *ThreadView) ThreadEntry(board string, id uint) error {
+	t.FormReply = int(id)
+	// Set all replies.
+	if err := db.Find(&t.Replies, "board = ? AND parent = ?", board, id).Error; err != nil {
+		return err
+	}
+
+	// Set op post itself.
+	return db.Where(&Post{}).
+		First(&t.OP, "parent = 0 AND board = ? AND id = ?", board, id).
+		Error
+}
+
 func serveThread(c echo.Context) error {
-	b := c.Param("board")
-
-	var (
-		id    int
-		board *Board
-		op    *Post
-	)
-
-	initialization := Maybe{
-		func() (err error) {
-			id, err = strconv.Atoi(c.Param("id"))
-			return err
-		},
-		func() (err error) {
-			board, err = checkRecord(&Board{Link: b})
-			return err
-		},
-		func() (err error) {
-			op, err = checkThread(board.Link, uint(id))
-			return err
-		},
-	}
-
-	err := initialization.Eval()
+	board := c.Param("board")
+	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		return c.String(http.StatusBadRequest, err.Error())
+		return c.JSON(http.StatusBadRequest, Error{"invalid thread id"})
 	}
 
-	tv := ThreadView{
-		NavbarInfo: NavbarInfo{
-			CurrentBoard: *board,
-		},
-		FormInfo: FormInfo{
-			FormReply: int(op.ID),
-		},
-		OP: *op,
+	tv := ThreadView{}
+	if err := tv.SetHeader(board); err != nil {
+		return c.JSON(http.StatusBadRequest, Error{err.Error()})
 	}
 
-	requests := Maybe{
-		func() (err error) {
-			return tv.SetNavbar(db)
-		},
-		func() (err error) {
-			return db.Find(&tv.Replies, "board = ? AND parent = ?", b, op.ID).Error
-		},
-	}
-
-	err = requests.Eval()
-	if err != nil {
-		return c.String(http.StatusInternalServerError, err.Error())
+	if err := tv.ThreadEntry(board, uint(id)); err != nil {
+		log.Error().Msg(err.Error())
+		return c.JSON(http.StatusInternalServerError, Error{err.Error()})
 	}
 
 	view := new(strings.Builder)
-	err = templates.ExecuteTemplate(view, "thread.tmpl", tv)
-	if err != nil {
-		return c.String(http.StatusInternalServerError, err.Error())
+
+	if err := templates.ExecuteTemplate(view, "thread.tmpl", tv); err != nil {
+		log.Error().Msg(err.Error())
+		return c.JSON(http.StatusInternalServerError, Error{err.Error()})
 	}
 
 	return c.HTML(http.StatusOK, view.String())
