@@ -49,7 +49,6 @@ func (t Post) RenderedText() template.HTML {
 	return replaceMarkdown(t.Text)
 }
 
-// Check if current poster isn't banned.
 func (p *Post) CheckBanned() error {
 	var b Ban
 	err := db.Where(&Ban{Hash: p.IpHash}).
@@ -73,7 +72,6 @@ func (p *Post) CheckBanned() error {
 	)
 }
 
-// Check if post board exists.
 func (p *Post) CheckBoard() error {
 	_, err := checkRecord(&Board{
 		Link: p.Board,
@@ -81,7 +79,6 @@ func (p *Post) CheckBoard() error {
 	return err
 }
 
-// Check if post thread exists.
 func (p *Post) CheckThread() error {
 	if p.Parent == 0 {
 		return nil
@@ -90,7 +87,6 @@ func (p *Post) CheckThread() error {
 	return err
 }
 
-// Check if post subject is valid.
 func (p *Post) CheckSubject() error {
 	l := len(p.Subject)
 	if l == 0 && p.Parent == 0 {
@@ -102,7 +98,6 @@ func (p *Post) CheckSubject() error {
 	return nil
 }
 
-// Check if post name is valid.
 func (p *Post) CheckName() error {
 	if p.Name == "" {
 		p.Name = "Anonymous"
@@ -127,7 +122,6 @@ func (p *Post) CheckCaptcha() error {
 	return nil
 }
 
-// Get files assigned with post.
 func (p *Post) GetFiles(tx *gorm.DB) ([]File, error) {
 	var fs FilesJson
 	if err := json.Unmarshal([]byte(p.FilesJson), &fs); err != nil {
@@ -144,7 +138,6 @@ func (p *Post) GetFiles(tx *gorm.DB) ([]File, error) {
 	return files, res.Error
 }
 
-// Assign files by it's ids with post.
 func (p *Post) SetFiles(tx *gorm.DB, fs []File) error {
 	ids := FilesJson{make([]int, 0)}
 	for i := range fs {
@@ -161,7 +154,6 @@ func (p *Post) SetFiles(tx *gorm.DB, fs []File) error {
 	return res.Error
 }
 
-// Bump parent thread if neither sage nor creating.
 func (p *Post) BumpParent(tx *gorm.DB) error {
 	if p.Sage || p.Parent == 0 {
 		return nil

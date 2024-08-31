@@ -37,7 +37,6 @@ func migrate() error {
 	return migrations.Eval()
 }
 
-// Check if record with provided conditions exists.
 func checkRecord[T any](schema *T, conds ...any) (*T, error) {
 	var res T
 	result := db.
@@ -52,10 +51,4 @@ func checkRecord[T any](schema *T, conds ...any) (*T, error) {
 	}
 
 	return &res, nil
-}
-
-// Generic selector.
-func get[T any](schema *T, conds ...any) error {
-	result := db.Find(schema, conds...)
-	return result.Error
 }

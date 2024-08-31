@@ -91,12 +91,12 @@ func serveBoard(c echo.Context) error {
 		},
 		// Get all threads for current board.
 		func() error {
-			return get(&posts, "board = ? AND parent = 0", board.Link)
+			return db.Find(&posts, "board = ? AND parent = 0", board.Link).Error
 		},
 		// Get all boards for header.
 		// todo: cache to avoid requests to db.
 		func() error {
-			return get(&boards)
+			return db.Find(&boards).Error
 		},
 	}
 	err = initialization.Eval()
@@ -245,7 +245,7 @@ func serveThread(c echo.Context) error {
 			return tv.RequestBoards(db)
 		},
 		func() (err error) {
-			return get(&tv.Replies, "board = ? AND parent = ?", b, op.ID)
+			return db.Find(&tv.Replies, "board = ? AND parent = ?", b, op.ID).Error
 		},
 	}
 

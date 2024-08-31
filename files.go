@@ -20,7 +20,6 @@ const (
 )
 
 // Files assosiated with post are encoded as json string.
-// So we can store multiple files for single post record.
 type FilesJson struct {
 	Ids []int `json:"ids"`
 }
@@ -45,7 +44,6 @@ func migrateFile() error {
 	return db.AutoMigrate(&File{})
 }
 
-// Read files content from form, then save it on disk.
 func processFiles(ctx echo.Context) ([]File, error) {
 	form, err := ctx.MultipartForm()
 	if err != nil {
@@ -73,7 +71,6 @@ func genName(fname string) string {
 	return hash(uuid.NewString()) + ext
 }
 
-// Predict file's format by it's header sign.
 // https://www.garykessler.net/library/file_sigs.html
 var signatures = map[string]func([]byte) bool{
 	"jpeg": jpeg,
@@ -139,7 +136,6 @@ func webm(f []byte) bool {
 	}.CheckSign(f)
 }
 
-// Set up File.Sign field or return error if it doesn't avaiable.
 func (f *File) SetSignature(buf []byte) error {
 	for key, sign := range signatures {
 		if sign(buf) {
@@ -150,7 +146,6 @@ func (f *File) SetSignature(buf []byte) error {
 	return ErrorInvalidSignature
 }
 
-// Save file itself on disk.
 func (f *File) Save(buf io.Reader) error {
 	dst, err := os.Create(f.Path)
 	if err != nil {
@@ -162,7 +157,6 @@ func (f *File) Save(buf io.Reader) error {
 	return err
 }
 
-// Save flie to `src` dir if it is fits conditions.
 func uploadFile(header *multipart.FileHeader) (*File, error) {
 	// todo(zvezdochka): redeclare maxsize const in config.
 	if header.Size > FileMaxSize {

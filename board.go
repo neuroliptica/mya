@@ -19,7 +19,7 @@ func migrateBoard() error {
 	return db.AutoMigrate(&Board{})
 }
 
-// todo: check permission, etc.
+// todo(zvezdochka): permissions middleware.
 func createBoard(c echo.Context) error {
 	board := new(Board)
 	if err := c.Bind(board); err != nil {
@@ -37,9 +37,8 @@ func createBoard(c echo.Context) error {
 		Name: board.Name,
 		Link: board.Link,
 	}
-	result := db.Create(&br)
-	if result.Error != nil {
-		log.Error().Msg(result.Error.Error())
+	if err := db.Create(&br).Error; err != nil {
+		log.Error().Msg(err.Error())
 		return c.JSON(http.StatusBadRequest, ErrorCreateFailed)
 	}
 
@@ -48,8 +47,7 @@ func createBoard(c echo.Context) error {
 
 func getBoards(c echo.Context) error {
 	var boards []Board
-	err := get(&boards)
-	if err != nil {
+	if err := db.Find(&boards).Error; err != nil {
 		log.Error().Msg(err.Error())
 		return c.JSON(http.StatusBadRequest, ErrorGetFailed)
 	}
