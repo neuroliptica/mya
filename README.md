@@ -1,7 +1,7 @@
 # mya
 Имиджборда в учебных целях. Фронт вдохновлен cutechan.
 
-## собрать
+## Build
 * Go >= 1.18
 * C11 compiler
 * make
@@ -10,19 +10,25 @@
 * ffmpeg >= 4.1 libraries (libavcodec, libavutil, libavformat, libswscale)
 
 ```bash
+$ sudo apt-get update
+$ sudo apt-get install graphicsmagick-libmagick-dev-compat \
+	build-essential \
+	pkg-config \
+	curl \
+	libavcodec-dev \
+	libavutil-dev \
+	libavformat-dev \
+	libswscale-dev
 $ git clone https://github.com/neuroliptica/mya.git
-$ cd mya && go build
+$ cd mya
+$ go build
 ```
 
-## запуск
+## Start
 ```bash
 $ ./mya
 ```
-При первом запуске нужно будет создать хотя бы одну доску. Установите curl.
-```bash
-$ sudo apt-get install curl
-```
-Затем отправьте POST запрос на эндпоинт /api/create_board следующего вида:
+При первом запуске нужно будет создать хотя бы одну доску. Отправьте POST запрос на эндпоинт /api/create_board следующего вида:
 ```bash
 $ curl -X POST http://localhost:3000/api/create_board \
 -H 'Content-Type: application/json' \
