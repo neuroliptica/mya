@@ -1,5 +1,5 @@
 <div class="board-pagination">
-  {{ range .Pages }}
+  {{ range .Total }}
     {{ if eq $.Current . }}
       <span class="board-pagination-page board-pagination-page-current">{{.}}</span>
     {{ else }}

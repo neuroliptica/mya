@@ -19,8 +19,14 @@ type NavbarInfo struct {
 }
 
 // Get all avaible boards from db.
-func (nav *NavbarInfo) RequestBoards(tx *gorm.DB) error {
+func (nav *NavbarInfo) SetNavbar(tx *gorm.DB) error {
 	return tx.Find(&nav.Navbar).Error
+}
+
+func (nav *NavbarInfo) SetCurrentBoard(tx *gorm.DB, link string) error {
+	return tx.Where(&Board{Link: link}).
+		First(&nav.CurrentBoard).
+		Error
 }
 
 // Embed in every view with form.
@@ -38,7 +44,7 @@ func serveMain(c echo.Context) error {
 
 	init := Maybe{
 		func() error {
-			return mv.RequestBoards(db)
+			return mv.SetNavbar(db)
 		},
 		func() error {
 			return templates.ExecuteTemplate(view, "main_page.tmpl", mv)
@@ -47,7 +53,7 @@ func serveMain(c echo.Context) error {
 
 	if err := init.Eval(); err != nil {
 		log.Error().Msg(err.Error())
-		return c.String(http.StatusInternalServerError, err.Error())
+		return c.JSON(http.StatusInternalServerError, Error{err.Error()})
 	}
 
 	return c.HTML(http.StatusOK, view.String())
@@ -55,15 +61,23 @@ func serveMain(c echo.Context) error {
 
 type Paging struct {
 	Current uint
-	Pages   []uint
+	Total   []uint
 }
 
 type BoardView struct {
 	NavbarInfo
 	FormInfo
-	Threads []ThreadView
 
-	Pages Paging
+	Threads []ThreadView
+	Pages   Paging
+}
+
+func (b *BoardView) SetHeader(link string) error {
+	if err := b.SetCurrentBoard(db, link); err != nil {
+		return err
+	}
+
+	return b.SetNavbar(db)
 }
 
 func (b BoardView) LastId() int {
@@ -77,31 +91,16 @@ func serveBoard(c echo.Context) error {
 		page = 0
 	}
 
-	var (
-		board  *Board
-		posts  []Post
-		boards []Board
-	)
-
-	initialization := Maybe{
-		// Check if board exists.
-		func() (err error) {
-			board, err = checkRecord(&Board{Link: b})
-			return err
-		},
-		// Get all threads for current board.
-		func() error {
-			return db.Find(&posts, "board = ? AND parent = 0", board.Link).Error
-		},
-		// Get all boards for header.
-		// todo: cache to avoid requests to db.
-		func() error {
-			return db.Find(&boards).Error
-		},
+	bv := BoardView{}
+	if err := bv.SetHeader(b); err != nil {
+		log.Error().Msg(err.Error())
+		return c.JSON(http.StatusBadRequest, Error{err.Error()})
 	}
-	err = initialization.Eval()
-	if err != nil {
-		return c.String(http.StatusBadRequest, err.Error())
+
+	posts := []Post{}
+	if err := db.Find(&posts, "board = ? AND parent = 0", b).Error; err != nil {
+		log.Error().Msg(err.Error())
+		return c.JSON(http.StatusBadRequest, Error{err.Error()})
 	}
 
 	// Sorting by last bump.
@@ -120,24 +119,16 @@ func serveBoard(c echo.Context) error {
 	rb := (page + 1) * 10
 	rb = int(math.Min(float64(rb), float64(len(posts))))
 	if rb < lb {
-		// todo: redirect or normal error message.
-		return c.String(http.StatusBadRequest, "no such page")
+		return c.JSON(http.StatusBadRequest, Error{"no such page"})
 	}
-	posts = posts[lb:rb]
 
-	bv := BoardView{
-		NavbarInfo: NavbarInfo{
-			Navbar:       boards,
-			CurrentBoard: *board,
-		},
-		Pages: Paging{
-			Current: uint(page),
-			Pages:   make([]uint, pages),
-		},
-	}
+	posts = posts[lb:rb]
+	bv.Pages.Current = uint(page)
+	bv.Pages.Total = make([]uint, pages)
+
 	// Generate total pages indexes.
-	for i := range bv.Pages.Pages {
-		bv.Pages.Pages[i] = uint(i)
+	for i := range bv.Pages.Total {
+		bv.Pages.Total[i] = uint(i)
 	}
 
 	// Create view entry for every thread on board.
@@ -146,37 +137,10 @@ func serveBoard(c echo.Context) error {
 			OP:      posts[i],
 			Omitted: 0,
 		}
-		replies := Maybe{
-			// Get last 3 replies.
-			func() error {
-				res := db.Where(&Post{
-					Board:  board.Link,
-					Parent: posts[i].ID,
-				}).
-					Order("id desc").
-					Limit(3).
-					Find(&tv.Replies)
-
-				return res.Error
-			},
-			// Get total amount of replies.
-			func() error {
-				res := db.Model(&Post{}).
-					Where("board = ? AND parent = ?", board.Link, tv.OP.ID).
-					Count(&tv.Omitted)
-
-				return res.Error
-			},
+		if err := tv.BoardEntry(); err != nil {
+			log.Error().Msg(err.Error())
+			return c.JSON(http.StatusBadRequest, Error{err.Error()})
 		}
-		err := replies.Eval()
-		if err != nil {
-			return c.String(http.StatusInternalServerError, err.Error())
-		}
-
-		// Reverse the last 3 replies order.
-		sort.Slice(tv.Replies, func(i, j int) bool {
-			return tv.Replies[i].ID < tv.Replies[j].ID
-		})
 
 		tv.Omitted -= int64(len(tv.Replies))
 		bv.Threads = append(bv.Threads, tv)
@@ -184,9 +148,10 @@ func serveBoard(c echo.Context) error {
 
 	// Render board page.
 	view := new(strings.Builder)
-	err = templates.ExecuteTemplate(view, "board.tmpl", bv)
-	if err != nil {
-		return c.String(http.StatusInternalServerError, err.Error())
+
+	if err := templates.ExecuteTemplate(view, "board.tmpl", bv); err != nil {
+		log.Error().Msg(err.Error())
+		return c.JSON(http.StatusInternalServerError, Error{err.Error()})
 	}
 
 	return c.HTML(http.StatusOK, view.String())
@@ -199,6 +164,33 @@ type ThreadView struct {
 	OP      Post
 	Replies []Post
 	Omitted int64
+}
+
+func (t *ThreadView) BoardEntry() error {
+	// Get last 3 replies.
+	err := db.Where(&Post{
+		Board:  t.OP.Board,
+		Parent: t.OP.ID,
+	}).
+		Order("id desc").
+		Limit(4).
+		Find(&t.Replies).
+		Error
+
+	if err != nil {
+		return err
+	}
+
+	// Reverse it's order.
+	sort.Slice(t.Replies, func(i, j int) bool {
+		return t.Replies[i].ID < t.Replies[j].ID
+	})
+
+	// Get total amount of replies.
+	return db.Model(&Post{}).
+		Where("board = ? AND parent = ?", t.OP.Board, t.OP.ID).
+		Count(&t.Omitted).
+		Error
 }
 
 func serveThread(c echo.Context) error {
@@ -242,7 +234,7 @@ func serveThread(c echo.Context) error {
 
 	requests := Maybe{
 		func() (err error) {
-			return tv.RequestBoards(db)
+			return tv.SetNavbar(db)
 		},
 		func() (err error) {
 			return db.Find(&tv.Replies, "board = ? AND parent = ?", b, op.ID).Error
