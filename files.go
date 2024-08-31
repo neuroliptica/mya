@@ -7,7 +7,7 @@ import (
 	"io"
 	"mime/multipart"
 	"os"
-	"strings"
+	"path/filepath"
 
 	"github.com/bakape/thumbnailer/v2"
 	"github.com/google/uuid"
@@ -19,7 +19,8 @@ const (
 	ThumbDirectory = "thumb"
 	FileMaxSize    = 2e7
 
-	UndefinedSign = ""
+	ThumbHeight = 250
+	ThumbWidth  = 250
 )
 
 // Files assosiated with post are encoded as json string.
@@ -65,13 +66,7 @@ func processFiles(ctx echo.Context) ([]File, error) {
 }
 
 func genName(fname string) string {
-	// todo(zvezdochka): normal filenames generation.
-	p := strings.Split(fname, ".")
-	ext := ""
-	if len(p) != 0 {
-		ext = "." + p[len(p)-1]
-	}
-	return hash(uuid.NewString()) + ext
+	return hash(uuid.NewString()) + filepath.Ext(fname)
 }
 
 // https://www.garykessler.net/library/file_sigs.html
@@ -106,35 +101,27 @@ func (s FSign) CheckSign(f []byte) bool {
 
 func jpeg(f []byte) bool {
 	return FSign{
-		Leading:  []byte{0xff, 0xd8},
-		Trailing: []byte{0xff, 0xd9},
+		Leading:  []byte("\xff\xd8"),
+		Trailing: []byte("\xff\xd9"),
 	}.CheckSign(f)
 }
 
 func png(f []byte) bool {
 	return FSign{
-		Leading: []byte{
-			0x89, 0x50, 0x4e, 0x47,
-			0x0d, 0x0a, 0x1a, 0x0a,
-		},
+		Leading: []byte("\x89\x50\x4e\x47\x0d\x0a\x1a\x0a"),
 	}.CheckSign(f)
 }
 
 func mp4(f []byte) bool {
 	return FSign{
-		Offset: 4,
-		Leading: []byte{
-			0x66, 0x74, 0x79, 0x70,
-			0x69, 0x73, 0x6f, 0x6d,
-		},
+		Offset:  4,
+		Leading: []byte("\x66\x74\x79\x70\x69\x73\x6f\x6d"),
 	}.CheckSign(f)
 }
 
 func webm(f []byte) bool {
 	return FSign{
-		Leading: []byte{
-			0x1A, 0x45, 0xDF, 0xA3,
-		},
+		Leading: []byte("\x1A\x45\xDF\xA3"),
 	}.CheckSign(f)
 }
 
@@ -159,7 +146,7 @@ func (f *File) SaveThumb(dst *os.File) error {
 	defer fs.Close()
 
 	opts := thumbnailer.Options{
-		ThumbDims: thumbnailer.Dims{250, 250},
+		ThumbDims: thumbnailer.Dims{ThumbWidth, ThumbHeight},
 	}
 	_, th, err := thumbnailer.Process(dst, opts)
 	if err != nil {
