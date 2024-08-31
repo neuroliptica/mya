@@ -3,6 +3,7 @@ module mya
 go 1.21.3
 
 require (
+	github.com/bakape/thumbnailer/v2 v2.7.1
 	github.com/google/uuid v1.6.0
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/rs/zerolog v1.33.0
@@ -20,6 +21,7 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-sqlite3 v1.14.22 // indirect
+	github.com/nwaples/rardecode v1.1.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	golang.org/x/crypto v0.22.0 // indirect
@@ -29,3 +31,5 @@ require (
 	golang.org/x/text v0.16.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 )
+
+replace github.com/bakape/thumbnailer/v2 => github.com/HeyPuter/thumbnailer/v2 v2.0.0-20230828231719-c526241bacef

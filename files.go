@@ -3,18 +3,21 @@ package main
 import (
 	"bytes"
 	"fmt"
+	pnglib "image/png"
 	"io"
 	"mime/multipart"
 	"os"
 	"strings"
 
+	"github.com/bakape/thumbnailer/v2"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
 const (
-	FileDirectory = "src"
-	FileMaxSize   = 2e7
+	FileDirectory  = "src"
+	ThumbDirectory = "thumb"
+	FileMaxSize    = 2e7
 
 	UndefinedSign = ""
 )
@@ -146,6 +149,25 @@ func (f *File) SetSignature(buf []byte) error {
 	return ErrorInvalidSignature
 }
 
+func (f *File) SaveThumb(dst *os.File) error {
+	f.Thumb = fmt.Sprintf("%s/thumb_%s", ThumbDirectory, f.Name)
+	fs, err := os.Create(f.Thumb)
+	if err != nil {
+		return err
+	}
+	defer fs.Close()
+
+	opts := thumbnailer.Options{
+		ThumbDims: thumbnailer.Dims{150, 150},
+	}
+	_, th, err := thumbnailer.Process(dst, opts)
+	if err != nil {
+		return err
+	}
+
+	return pnglib.Encode(fs, th)
+}
+
 func (f *File) Save(buf io.Reader) error {
 	dst, err := os.Create(f.Path)
 	if err != nil {
@@ -153,8 +175,11 @@ func (f *File) Save(buf io.Reader) error {
 	}
 	defer dst.Close()
 
-	_, err = io.Copy(dst, buf)
-	return err
+	if _, err := io.Copy(dst, buf); err != nil {
+		return err
+	}
+
+	return f.SaveThumb(dst)
 }
 
 func uploadFile(header *multipart.FileHeader) (*File, error) {
@@ -173,13 +198,14 @@ func uploadFile(header *multipart.FileHeader) (*File, error) {
 		return nil, err
 	}
 
+	fn := genName(header.Filename)
 	f := &File{
 		Path: fmt.Sprintf(
 			"%s/%s",
 			FileDirectory,
-			genName(header.Filename),
+			fn,
 		),
-		Name: header.Filename,
+		Name: fn,
 		Size: header.Size,
 	}
 

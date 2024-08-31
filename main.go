@@ -52,7 +52,8 @@ func main() {
 
 	// Serve static files.
 	e.Static("/static", "static")
-	e.Static("/src", "src")
+	e.Static("/src", FileDirectory)
+	e.Static("/thumb", ThumbDirectory)
 	e.GET("/favicon.ico", func(c echo.Context) error {
 		return c.Redirect(http.StatusPermanentRedirect, "/static/favicon.ico")
 	})
