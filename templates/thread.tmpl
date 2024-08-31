@@ -22,7 +22,7 @@
               <time class="post-header-item post-time">{{ .OP.FormatTimestamp }}</time>
             </header>
             <section class="post-body">
-              <div class="post-files"></div>
+              {{ template "post-files.tmpl" .OP }}
               <blockquote class="post-message">{{ .OP.RenderedText }}</blockquote>
             </section>
             <footer class="post-footer">
@@ -41,7 +41,7 @@
               <time class="post-header-item post-time">{{ .FormatTimestamp }}</time>
             </header>
             <section class="post-body">
-              <div class="post-files"></div>
+              {{ template "post-files.tmpl" . }}
               <blockquote class="post-message">{{ .RenderedText }}</blockquote>
             </section>
             <footer class="post-footer">

@@ -143,6 +143,11 @@ func serveBoard(c echo.Context) error {
 			return c.JSON(http.StatusBadRequest, Error{err.Error()})
 		}
 
+		if err := tv.SetFiles(db); err != nil {
+			log.Error().Msg(err.Error())
+			// just ignore and return posts w/o files.
+		}
+
 		tv.Omitted -= int64(len(tv.Replies))
 		bv.Threads = append(bv.Threads, tv)
 	}
@@ -208,6 +213,22 @@ func (t *ThreadView) ThreadEntry(board string, id uint) error {
 		Error
 }
 
+func (t *ThreadView) SetFiles(tx *gorm.DB) error {
+	ps := []*Post{&t.OP}
+	for i := range t.Replies {
+		ps = append(ps, &t.Replies[i])
+	}
+	for i := range ps {
+		fs, err := ps[i].GetFiles(tx)
+		if err != nil {
+			return err
+		}
+		ps[i].Files = fs
+	}
+
+	return nil
+}
+
 func serveThread(c echo.Context) error {
 	board := c.Param("board")
 	id, err := strconv.Atoi(c.Param("id"))
@@ -223,6 +244,10 @@ func serveThread(c echo.Context) error {
 	if err := tv.ThreadEntry(board, uint(id)); err != nil {
 		log.Error().Msg(err.Error())
 		return c.JSON(http.StatusInternalServerError, Error{err.Error()})
+	}
+
+	if err := tv.SetFiles(db); err != nil {
+		log.Error().Msg(err.Error())
 	}
 
 	view := new(strings.Builder)

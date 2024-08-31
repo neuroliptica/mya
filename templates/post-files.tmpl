@@ -1,0 +1,15 @@
+<div class="post-files">
+  {{ range .Files }}
+  <figure class="post-file"> 
+    <figcaption class="post-file-info">
+    <span class="post-file-info-item post-file-dims">200x200</span>
+    <span class="post-file-info-item post-file-size">
+      1.5mb
+    </span>
+    </figcaption>
+    <a class="post-file-link" href="/{{ .Path }}" target="_blank">
+      <img class="post-file-thumb" src="/{{ .Thumb }}" loading="lazy">
+    </a>
+  </figure>
+  {{ end }}
+</div>

@@ -159,7 +159,7 @@ func (f *File) SaveThumb(dst *os.File) error {
 	defer fs.Close()
 
 	opts := thumbnailer.Options{
-		ThumbDims: thumbnailer.Dims{150, 150},
+		ThumbDims: thumbnailer.Dims{250, 250},
 	}
 	_, th, err := thumbnailer.Process(dst, opts)
 	if err != nil {
