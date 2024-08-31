@@ -22,7 +22,7 @@
       <section id="index-thread-container" class="thread-container">
       {{ range $index, $op := .Threads }}
         <article id="thread-{{ .OP.ID }}" class="thread thread-index" data-id="{{ .OP.ID }}">
-          <article id="post-{{ .OP.ID }}" class="post post-op post-file post-by-anon" data-id="{{ .OP.ID }}">
+          <article id="post-{{ .OP.ID }}" class="post post-op post-by-anon {{ if .OP.HasFiles }}post_file{{ end }}" data-id="{{ .OP.ID }}">
             <header class="post-header">
               <a class="post-header-item post-id" href="/{{ $.CurrentBoard.Link }}/{{ .OP.ID }}">#{{ .OP.ID }}</a>
               <h3 class="post-header-item post-subject">{{ .OP.Subject }}</h3>
@@ -43,7 +43,7 @@
             <a class="omit-link" href="/{{ $.CurrentBoard.Link }}/{{ .OP.ID }}">Go to thread</a>
           </div>
         {{ range .Replies }}
-          <article id="post-{{ .ID }}" class="post post-by-anon" data-id="{{ .ID }}">
+          <article id="post-{{ .ID }}" class="post post-by-anon {{ if .HasFiles }}post_file{{ end }}" data-id="{{ .ID }}">
             <header class="post-header">
               <a class="post-header-item post-id" href="/{{ $.CurrentBoard.Link }}/{{ $op.OP.ID }}#{{ .ID }}">#{{ .ID }}</a>
               <h3 class="post-header-item post-subject"></h3>

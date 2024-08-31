@@ -394,3 +394,85 @@ h3 {
   min-height: 150px;
 }
 
+img {
+  border-style: none;
+}
+
+.post-file {
+  margin:0
+}
+
+.post_files .post-file {
+  display:inline-block
+}
+
+.post-file-link {
+  display:block;
+  position:relative;
+  float:left;
+  margin:0 15px 5px 0;
+  outline:none
+}
+
+.post-file-badge {
+  position:absolute;
+  font-size:16px;
+  color:#dccee3;
+  text-shadow:1px 1px 2px #191719
+}
+
+.post-file-video-badge {
+  left:2px;
+  top:2px
+}
+
+.post-file-audio-badge {
+  left:18px;
+  top:2px
+}
+
+.post-file-thumb {
+  display:block
+}
+
+.post-file_record .post-file-thumb {
+  width:100px;
+  height:100px;
+  text-align:center;
+  line-height:100px;
+  font-size:50px;
+  color:#86798a
+}
+
+html.work-mode .post-file-link {
+  display:none
+}
+
+html.work-mode .post-file-info:hover~.post-file-link {
+  display:block
+}
+
+.post-file-info {
+  font-size:smaller;
+  font-style:italic;
+  color:grey;
+  padding-right:5px
+}
+
+.post-file-info-item~.post-file-info-item:before {
+  content:", "
+}
+
+.post-file-title {
+  display:inline-block;
+  max-width:130px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  vertical-align:top;
+  cursor:pointer
+}
+
+.post_file {
+  min-width:400px
+}

@@ -41,6 +41,10 @@ func (t Post) FormatTimestamp() string {
 	return t.CreatedAt.Format("02/01/2006 15:04:05")
 }
 
+func (t Post) HasFiles() bool {
+	return len(t.Files) != 0
+}
+
 // Replace markdown tags with html tags.
 func (t Post) RenderedText() template.HTML {
 	return replaceMarkdown(t.Text)

@@ -1,15 +1,15 @@
 <div class="post-files">
-  {{ range .Files }}
+{{ range .Files }}
   <figure class="post-file"> 
     <figcaption class="post-file-info">
-    <span class="post-file-info-item post-file-dims">200x200</span>
-    <span class="post-file-info-item post-file-size">
-      1.5mb
-    </span>
+      <span class="post-file-info-item post-file-dims">{{ .Width }}x{{ .Height }}</span>
+      <span class="post-file-info-item post-file-size">
+        {{ .Size }}
+      </span>
     </figcaption>
     <a class="post-file-link" href="/{{ .Path }}" target="_blank">
       <img class="post-file-thumb" src="/{{ .Thumb }}" loading="lazy">
     </a>
   </figure>
-  {{ end }}
+{{ end }}
 </div>

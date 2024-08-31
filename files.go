@@ -138,7 +138,7 @@ func (f *File) SetSignature(buf []byte) error {
 // Saving thumbnails as pngs in it's own directory.
 func (f *File) SaveThumb(dst *os.File) error {
 	// todo(zvezdochka): check about fs descriptors limits.
-	f.Thumb = fmt.Sprintf("%s/thumb_%s", ThumbDirectory, f.Name)
+	f.Thumb = fmt.Sprintf("%s/thumb_%s.png", ThumbDirectory, f.Name)
 	fs, err := os.Create(f.Thumb)
 	if err != nil {
 		return err
@@ -148,10 +148,13 @@ func (f *File) SaveThumb(dst *os.File) error {
 	opts := thumbnailer.Options{
 		ThumbDims: thumbnailer.Dims{ThumbWidth, ThumbHeight},
 	}
-	_, th, err := thumbnailer.Process(dst, opts)
+	src, th, err := thumbnailer.Process(dst, opts)
 	if err != nil {
 		return err
 	}
+
+	f.Height = src.Height
+	f.Width = src.Width
 
 	return pnglib.Encode(fs, th)
 }
