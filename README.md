@@ -2,6 +2,13 @@
 Имиджборда в учебных целях. Фронт вдохновлен cutechan.
 
 ## собрать
+* Go >= 1.18
+* C11 compiler
+* make
+* pkg-config
+* pthread
+* ffmpeg >= 4.1 libraries (libavcodec, libavutil, libavformat, libswscale)
+
 ```bash
 $ git clone https://github.com/neuroliptica/mya.git
 $ cd mya && go build
