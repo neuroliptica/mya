@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"time"
 
 	"gorm.io/driver/sqlite"
@@ -35,20 +34,4 @@ func migrate() error {
 		migrateFile,
 	}
 	return migrations.Eval()
-}
-
-func checkRecord[T any](schema *T, conds ...any) (*T, error) {
-	var res T
-	result := db.
-		Where(schema).
-		First(&res, conds...)
-
-	if result.Error != nil {
-		return nil, result.Error
-	}
-	if result.RowsAffected == 0 {
-		return nil, errors.New("no records")
-	}
-
-	return &res, nil
 }

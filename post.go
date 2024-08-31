@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -36,10 +37,6 @@ func migratePost() error {
 	return db.AutoMigrate(&Post{})
 }
 
-func checkThread(board string, id uint) (*Post, error) {
-	return checkRecord(&Post{}, "parent = 0 AND board = ? AND id = ?", board, id)
-}
-
 func (t Post) FormatTimestamp() string {
 	return t.CreatedAt.Format("02/01/2006 15:04:05")
 }
@@ -51,9 +48,7 @@ func (t Post) RenderedText() template.HTML {
 
 func (p *Post) CheckBanned() error {
 	var b Ban
-	err := db.Where(&Ban{Hash: p.IpHash}).
-		First(&b).
-		Error
+	err := db.Where(&Ban{Hash: p.IpHash}).First(&b).Error
 	switch err {
 	case nil:
 		break
@@ -73,18 +68,31 @@ func (p *Post) CheckBanned() error {
 }
 
 func (p *Post) CheckBoard() error {
-	_, err := checkRecord(&Board{
-		Link: p.Board,
-	})
-	return err
+	var b Board
+	err := db.Where(&Board{Link: p.Board}).First(&b).Error
+	switch err {
+	case gorm.ErrRecordNotFound:
+		return errors.New("invalid board")
+	default:
+		return err
+	}
 }
 
 func (p *Post) CheckThread() error {
 	if p.Parent == 0 {
 		return nil
 	}
-	_, err := checkThread(p.Board, p.Parent)
-	return err
+	var f Post
+	err := db.Where(&Post{}).
+		First(&f, "parent = 0 AND board = ? AND id = ?", p.Board, p.Parent).
+		Error
+
+	switch err {
+	case gorm.ErrRecordNotFound:
+		return errors.New("invalid thread id")
+	default:
+		return err
+	}
 }
 
 func (p *Post) CheckSubject() error {
