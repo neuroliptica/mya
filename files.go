@@ -48,6 +48,14 @@ func migrateFile() error {
 	return db.AutoMigrate(&File{})
 }
 
+func (f File) StringSize() string {
+	bs := float64(f.Size) / (1024 * 1024)
+	if bs < 1.0 {
+		return fmt.Sprintf("%.2fKb", bs*1024)
+	}
+	return fmt.Sprintf("%.2fMb", bs)
+}
+
 func processFiles(ctx echo.Context) ([]File, error) {
 	form, err := ctx.MultipartForm()
 	if err != nil {

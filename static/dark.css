@@ -456,7 +456,8 @@ html.work-mode .post-file-info:hover~.post-file-link {
   font-size:smaller;
   font-style:italic;
   color:grey;
-  padding-right:5px
+  padding-right:5px;
+  padding-bottom: 3px;
 }
 
 .post-file-info-item~.post-file-info-item:before {
