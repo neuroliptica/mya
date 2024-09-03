@@ -7,7 +7,7 @@
         {{ .StringSize }}
       </span>
     </figcaption>
-    <a class="post-file-link" href="/{{ .Path }}" target="_blank">
+    <a class="post-file-link {{ if .IsVideo }}post-file-link-video{{ end }}" href="/{{ .Path }}" target="_blank">
       <img class="post-file-thumb" src="/{{ .Thumb }}" loading="lazy">
     </a>
   </figure>

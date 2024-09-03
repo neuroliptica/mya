@@ -208,12 +208,9 @@ hr {
   word-break: break-word;
 }
 
-.post-op, .post-header {
-  font-size: larger;
-}
-
 .post-header {
   width: 100%;
+  font-size: large;
 }
 
 .post-header-item {
@@ -412,6 +409,10 @@ img {
   float:left;
   margin:0 15px 5px 0;
   outline:none
+}
+
+.post-file-link-video {
+  border: white dashed 1px;
 }
 
 .post-file-badge {

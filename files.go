@@ -21,6 +21,11 @@ const (
 
 	ThumbHeight = 250
 	ThumbWidth  = 250
+
+	WebmMime = "video/webm"
+	Mp4Mime  = "video/mp4"
+	JpegMime = "image/jpeg"
+	PngMime  = "image/png"
 )
 
 // Files assosiated with post are encoded as json string.
@@ -56,6 +61,10 @@ func (f File) StringSize() string {
 	return fmt.Sprintf("%.2fMb", bs)
 }
 
+func (f File) IsVideo() bool {
+	return f.Sign == WebmMime || f.Sign == Mp4Mime
+}
+
 func processFiles(ctx echo.Context) ([]File, error) {
 	form, err := ctx.MultipartForm()
 	if err != nil {
@@ -79,10 +88,10 @@ func genName(fname string) string {
 
 // https://www.garykessler.net/library/file_sigs.html
 var signatures = map[string]func([]byte) bool{
-	"image/jpeg": jpeg,
-	"image/png":  png,
-	"video/webm": webm,
-	"video/mp4":  mp4,
+	JpegMime: jpeg,
+	PngMime:  png,
+	WebmMime: webm,
+	Mp4Mime:  mp4,
 }
 
 type FSign struct {
