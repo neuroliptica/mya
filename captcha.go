@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -65,14 +66,14 @@ func (c *Storage) Check(value string, id string) bool {
 		return false
 	}
 
-	return v.value == value
+	return strings.EqualFold(value, v.value)
 }
 
 // Get image for provided id.
 func (c *Storage) GetImage(id string) ([]byte, error) {
 	v, ok := c.Get(id)
 	if !ok || v == nil {
-		return nil, errors.New("invalid id or captcha expired")
+		return nil, errors.New("invalid id or captcha has expired")
 	}
 
 	return v.image, nil
